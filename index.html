@@ -1067,87 +1067,96 @@
             perfboardGroup.add(magnetR);
         }
 
-        /* --- 4.2 BUILD 3D PRINTED MIDDLE GRAY PERIMETER FRAME (1 SINGLE MONOLITHIC PIECE) --- */
+        // Universal BufferGeometry Merger to create seamless single-mesh 3D bodies
+        function mergeBufferGeometries(geometries) {
+            const positions = [];
+            const normals = [];
+
+            geometries.forEach(geom => {
+                const g = geom.toNonIndexed ? geom.toNonIndexed() : geom;
+                const pos = g.attributes.position.array;
+                const norm = g.attributes.normal ? g.attributes.normal.array : null;
+
+                for (let i = 0; i < pos.length; i++) positions.push(pos[i]);
+                if (norm) {
+                    for (let i = 0; i < norm.length; i++) normals.push(norm[i]);
+                }
+            });
+
+            const merged = new THREE.BufferGeometry();
+            merged.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            if (normals.length > 0) merged.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+            else merged.computeVertexNormals();
+
+            return merged;
+        }
+
+        /* --- 4.2 BUILD 3D PRINTED MIDDLE GRAY PERIMETER FRAME (1 SINGLE MONOLITHIC HOLLOW PIECE) --- */
         function build3DPrintedFrame() {
             const outW = SSOT.case.outerWidth;    // 75.2 mm
             const outH = SSOT.case.outerHeight;   // 95.2 mm
-            const inW = SSOT.case.innerWidth;     // 70.2 mm
-            const inH = SSOT.case.innerHeight;    // 90.2 mm
+            const wall = SSOT.case.wallThick;     // 2.5 mm
             const depth = SSOT.case.frameDepth;   // 14.8 mm
             const sX = SSOT.case.screwDistanceX;  // 33.8 mm
             const sY = SSOT.case.screwDistanceY;  // 43.8 mm
-            const r = 3.5;                        // Outer corner radius
-            const w2 = outW / 2;
-            const h2 = outH / 2;
-            const iw2 = inW / 2;
-            const ih2 = inH / 2;
-
-            // 1. Single Continuous Outer Boundary Path with Integrated Security Lobe
-            const frameShape = new THREE.Shape();
             const lugX = SSOT.case.wireLugX - 2.5;
             const lugY = SSOT.case.wireLugY;
 
-            frameShape.moveTo(-w2 + r, -h2);
-            frameShape.lineTo(w2 - r, -h2);
-            frameShape.quadraticCurveTo(w2, -h2, w2, -h2 + r);
-            frameShape.lineTo(w2, h2 - r);
-            frameShape.quadraticCurveTo(w2, h2, w2 - r, h2);
-            frameShape.lineTo(-w2 + r, h2);
-            frameShape.quadraticCurveTo(-w2, h2, -w2, h2 - r);
-            
-            // Down to bottom-left corner with integrated security lug lobe
-            frameShape.lineTo(-w2, lugY + 5);
-            frameShape.quadraticCurveTo(lugX - 4.5, lugY + 4, lugX - 4.5, lugY);
-            frameShape.quadraticCurveTo(lugX - 4.5, lugY - 4, -w2 + 3, -h2);
-            frameShape.closePath();
+            const frameParts = [];
 
-            // 2. Hole 1: 100% Hollow Center Cavity (Clockwise)
-            const centerHole = new THREE.Path();
-            centerHole.moveTo(-iw2, ih2);
-            centerHole.lineTo(iw2, ih2);
-            centerHole.lineTo(iw2, -ih2);
-            centerHole.lineTo(-iw2, -ih2);
-            centerHole.closePath();
-            frameShape.holes.push(centerHole);
+            // 1. Top Wall
+            const topG = new THREE.BoxGeometry(outW - 2 * wall, wall, depth);
+            topG.translate(0, outH/2 - wall/2, 0);
+            frameParts.push(topG);
 
-            // 3. Holes 2-5: 4 Corner Screw Bores Ø 3.2 mm (Clockwise)
-            const screwRad = SSOT.case.screwRadius;
-            [[-sX, sY], [sX, sY], [-sX, -sY], [sX, -sY]].forEach(([cx, cy]) => {
-                const sp = new THREE.Path();
-                for (let i = 0; i <= 16; i++) {
-                    const theta = - (i / 16) * Math.PI * 2;
-                    const x = cx + Math.cos(theta) * screwRad;
-                    const y = cy + Math.sin(theta) * screwRad;
-                    if (i === 0) sp.moveTo(x, y);
-                    else sp.lineTo(x, y);
-                }
-                sp.closePath();
-                frameShape.holes.push(sp);
+            // 2. Bottom Wall (Left and Right of USB Slot)
+            const botLen = (outW - 2 * wall - 14) / 2;
+            const botLeftG = new THREE.BoxGeometry(botLen, wall, depth);
+            botLeftG.translate(-botLen/2 - 7, -outH/2 + wall/2, 0);
+            frameParts.push(botLeftG);
+
+            const botRightG = new THREE.BoxGeometry(botLen, wall, depth);
+            botRightG.translate(botLen/2 + 7, -outH/2 + wall/2, 0);
+            frameParts.push(botRightG);
+
+            // 3. Left Wall (Top and Bottom of Magnet Window)
+            const sideLen = (outH - 2 * wall - 10) / 2;
+            const leftTopG = new THREE.BoxGeometry(wall, sideLen, depth);
+            leftTopG.translate(-outW/2 + wall/2, sideLen/2 + 5, 0);
+            frameParts.push(leftTopG);
+
+            const leftBotG = new THREE.BoxGeometry(wall, sideLen, depth);
+            leftBotG.translate(-outW/2 + wall/2, -sideLen/2 - 5, 0);
+            frameParts.push(leftBotG);
+
+            // 4. Right Wall (Top and Bottom of Magnet Window)
+            const rightTopG = new THREE.BoxGeometry(wall, sideLen, depth);
+            rightTopG.translate(outW/2 - wall/2, sideLen/2 + 5, 0);
+            frameParts.push(rightTopG);
+
+            const rightBotG = new THREE.BoxGeometry(wall, sideLen, depth);
+            rightBotG.translate(outW/2 - wall/2, -sideLen/2 - 5, 0);
+            frameParts.push(rightBotG);
+
+            // 5. Four Corner Rounded Boss Columns (Oriented along Z-axis)
+            const corners = [[-sX, sY], [sX, sY], [-sX, -sY], [sX, -sY]];
+            corners.forEach(([cx, cy]) => {
+                const colG = new THREE.CylinderGeometry(3.2, 3.2, depth, 20);
+                colG.rotateX(Math.PI / 2);
+                colG.translate(cx, cy, 0);
+                frameParts.push(colG);
             });
 
-            // 4. Hole 6: Security Wire Eyelet Ø 3.8 mm (Clockwise)
-            const wireEyelet = new THREE.Path();
-            for (let i = 0; i <= 16; i++) {
-                const theta = - (i / 16) * Math.PI * 2;
-                const x = lugX + Math.cos(theta) * 1.9;
-                const y = lugY + Math.sin(theta) * 1.9;
-                if (i === 0) wireEyelet.moveTo(x, y);
-                else wireEyelet.lineTo(x, y);
-            }
-            wireEyelet.closePath();
-            frameShape.holes.push(wireEyelet);
+            // 6. Integrated Security Wire Lug
+            const lugG = new THREE.CylinderGeometry(4.0, 4.0, depth, 20);
+            lugG.rotateX(Math.PI / 2);
+            lugG.translate(lugX, lugY, 0);
+            frameParts.push(lugG);
 
-            // 5. Extrude into a SINGLE Unified Solid 3D Printed Mesh
-            const frameGeom = new THREE.ExtrudeGeometry(frameShape, {
-                depth: depth,
-                bevelEnabled: true,
-                bevelSize: 0.35,
-                bevelThickness: 0.35,
-                bevelSegments: 2
-            });
-            frameGeom.center();
+            // 7. Merge ALL geometries into ONE SINGLE UNIFIED MONOLITHIC BODY
+            const unifiedFrameGeom = mergeBufferGeometries(frameParts);
 
-            const unifiedFrameMesh = new THREE.Mesh(frameGeom, frame3DMat);
+            const unifiedFrameMesh = new THREE.Mesh(unifiedFrameGeom, frame3DMat);
             unifiedFrameMesh.position.set(0, 0, 0);
             unifiedFrameMesh.castShadow = true;
             unifiedFrameMesh.receiveShadow = true;
@@ -1155,9 +1164,9 @@
             pickableObjects.push(unifiedFrameMesh);
             frame3DGroup.add(unifiedFrameMesh);
 
-            // Print / Layer edge highlight lines on the single body
-            const frameEdges = new THREE.EdgesGeometry(frameGeom, 28);
-            const frameEdgeMat = new THREE.LineBasicMaterial({ color: 0x64748b, transparent: true, opacity: 0.5 });
+            // Subtle print/edge highlight lines on the unified frame
+            const frameEdges = new THREE.EdgesGeometry(unifiedFrameGeom, 32);
+            const frameEdgeMat = new THREE.LineBasicMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.45 });
             const frameEdgeLines = new THREE.LineSegments(frameEdges, frameEdgeMat);
             frameEdgeLines.position.copy(unifiedFrameMesh.position);
             frame3DGroup.add(frameEdgeLines);
