@@ -205,77 +205,78 @@
         .spec-item .label { color: var(--text-muted); }
         .spec-item .val { color: var(--primary); font-weight: 600; }
 
-        /* Quick View Selector & Controls (Bottom HUD) */
+        /* Quick View Selector & Controls (Ultra-Slim Bottom Toolbar) */
         .hud-controls {
-            bottom: 24px;
+            bottom: 12px;
             left: 50%;
             transform: translateX(-50%);
-            padding: 12px 20px;
+            padding: 6px 14px;
             display: flex;
             align-items: center;
-            gap: 14px;
-            max-width: 95vw;
-            flex-wrap: wrap;
+            gap: 10px;
+            max-width: 96vw;
+            flex-wrap: nowrap;
             justify-content: center;
-        }
-
-        .control-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            border-radius: 9999px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+            z-index: 50;
         }
 
         .slider-wrapper {
             display: flex;
-            flex-direction: column;
-            gap: 4px;
-            min-width: 140px;
+            align-items: center;
+            gap: 8px;
+            min-width: 160px;
         }
 
         .slider-wrapper label {
             font-size: 11px;
             font-family: 'JetBrains Mono', monospace;
             color: var(--text-muted);
+            white-space: nowrap;
             display: flex;
-            justify-content: space-between;
+            gap: 4px;
         }
 
         .slider-wrapper input[type="range"] {
             -webkit-appearance: none;
-            width: 100%;
-            height: 5px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.15);
+            width: 85px;
+            height: 4px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.2);
             outline: none;
             cursor: pointer;
         }
 
         .slider-wrapper input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 15px;
-            height: 15px;
+            width: 13px;
+            height: 13px;
             border-radius: 50%;
             background: var(--primary);
-            box-shadow: 0 0 10px var(--primary);
+            box-shadow: 0 0 8px var(--primary);
             cursor: pointer;
             transition: transform 0.15s ease;
         }
         .slider-wrapper input[type="range"]::-webkit-slider-thumb:hover {
-            transform: scale(1.25);
+            transform: scale(1.2);
         }
 
         .btn-action {
             background: rgba(255, 255, 255, 0.06);
             border: 1px solid rgba(255, 255, 255, 0.14);
             color: var(--text-main);
-            padding: 7px 11px;
-            border-radius: 8px;
-            font-size: 11.5px;
+            padding: 5px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
             font-weight: 600;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             white-space: nowrap;
         }
@@ -291,13 +292,13 @@
             background: var(--primary);
             border-color: var(--primary);
             color: #04101e;
-            box-shadow: 0 0 12px var(--primary-glow);
+            box-shadow: 0 0 10px var(--primary-glow);
         }
 
         .divider {
             width: 1px;
-            height: 28px;
-            background: rgba(255, 255, 255, 0.12);
+            height: 20px;
+            background: rgba(255, 255, 255, 0.15);
         }
 
         /* Audio Visualizer Mode Bar (Bottom Left) */
@@ -463,47 +464,40 @@
         </div>
     </div>
 
-    <!-- HUD Bottom Controls (Exploded slider, Views, Wireframe, Cotas) -->
+    <!-- HUD Bottom Controls (Ultra-Slim Inline Toolbar) -->
     <div class="hud-panel hud-controls">
-        <div class="control-group">
-            <div class="slider-wrapper">
-                <label>
-                    <span>Despiece (Exploded Z)</span>
-                    <strong id="explode-num" style="color:var(--primary);">0 mm</strong>
-                </label>
-                <input type="range" id="explode-slider" min="0" max="80" value="0" step="0.5">
-            </div>
+        <div class="slider-wrapper">
+            <label>
+                <span>Despiece:</span>
+                <strong id="explode-num" style="color:var(--primary);">0 mm</strong>
+            </label>
+            <input type="range" id="explode-slider" min="0" max="80" value="0" step="0.5">
         </div>
 
         <div class="divider"></div>
 
-        <div class="control-group">
-            <button class="btn-action" id="btn-front" onclick="setView('front')">Frente (Pantalla+Mic)</button>
-            <button class="btn-action" id="btn-back" onclick="setView('back')">Dorso (ESP32)</button>
-            <button class="btn-action" id="btn-iso" onclick="setView('iso')">Perspectiva 3D</button>
-            <button class="btn-action" id="btn-side" onclick="setView('side')">Perfil Lateral</button>
-            <button class="btn-action" id="btn-screw" onclick="setView('screw')" style="border-color:rgba(56,189,248,0.5);">🔩 Zoom Tornillos M3</button>
-        </div>
+        <button class="btn-action active" id="btn-case" onclick="toggleCaseVisibility()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Ver Case
+        </button>
 
-        <div class="divider"></div>
+        <button class="btn-action" id="btn-glass" onclick="cycleGlassOpacity()">
+            Acrílico: <strong id="glass-mode-label" style="color:var(--primary);margin-left:2px;">Cristal (22%)</strong>
+        </button>
 
-        <div class="control-group">
-            <button class="btn-action active" id="btn-case" onclick="toggleCaseVisibility()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                Ver Case
-            </button>
-            <button class="btn-action" id="btn-glass" onclick="cycleGlassOpacity()">
-                Acrílico: <strong id="glass-mode-label" style="color:var(--primary);margin-left:3px;">Cristal (22%)</strong>
-            </button>
-            <button class="btn-action" id="btn-cotas" onclick="toggleCotas()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 6H3M21 18H3M6 21V3M18 21V3"/></svg>
-                Cotas CAD
-            </button>
-            <button class="btn-action" id="btn-turntable" onclick="toggleTurntable()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-                Giro 360°
-            </button>
-        </div>
+        <button class="btn-action" id="btn-screw" onclick="setView('screw')" style="border-color:rgba(56,189,248,0.4);">
+            🔩 Tornillos M3
+        </button>
+
+        <button class="btn-action" id="btn-cotas" onclick="toggleCotas()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 6H3M21 18H3M6 21V3M18 21V3"/></svg>
+            Cotas
+        </button>
+
+        <button class="btn-action" id="btn-turntable" onclick="toggleTurntable()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            Giro 360°
+        </button>
     </div>
 
     <!-- JavaScript 3D Engine -->
@@ -1073,92 +1067,100 @@
             perfboardGroup.add(magnetR);
         }
 
-        /* --- 4.2 BUILD 3D PRINTED MIDDLE GRAY PERIMETER BUMPER / FRAME (100% HOLLOW CENTER) --- */
+        /* --- 4.2 BUILD 3D PRINTED MIDDLE GRAY PERIMETER FRAME (1 SINGLE MONOLITHIC PIECE) --- */
         function build3DPrintedFrame() {
             const outW = SSOT.case.outerWidth;    // 75.2 mm
             const outH = SSOT.case.outerHeight;   // 95.2 mm
-            const wall = SSOT.case.wallThick;     // 2.5 mm
+            const inW = SSOT.case.innerWidth;     // 70.2 mm
+            const inH = SSOT.case.innerHeight;    // 90.2 mm
             const depth = SSOT.case.frameDepth;   // 14.8 mm
             const sX = SSOT.case.screwDistanceX;  // 33.8 mm
             const sY = SSOT.case.screwDistanceY;  // 43.8 mm
+            const r = 3.5;                        // Outer corner radius
+            const w2 = outW / 2;
+            const h2 = outH / 2;
+            const iw2 = inW / 2;
+            const ih2 = inH / 2;
 
-            // 1. Top Wall (Sleek thin 2.5mm horizontal beam)
-            const topGeom = new THREE.BoxGeometry(outW - 2 * wall, wall, depth);
-            const topWall = new THREE.Mesh(topGeom, frame3DMat);
-            topWall.position.set(0, outH/2 - wall/2, 0);
-            topWall.castShadow = true;
-            topWall.userData = { id: 'case_frame' };
-            pickableObjects.push(topWall);
-            frame3DGroup.add(topWall);
+            // 1. Single Continuous Outer Boundary Path with Integrated Security Lobe
+            const frameShape = new THREE.Shape();
+            const lugX = SSOT.case.wireLugX - 2.5;
+            const lugY = SSOT.case.wireLugY;
 
-            // 2. Bottom Wall (with centered USB cable slot)
-            const botLeftGeom = new THREE.BoxGeometry((outW - 2 * wall - 14) / 2, wall, depth);
-            const botLeft = new THREE.Mesh(botLeftGeom, frame3DMat);
-            botLeft.position.set(-(outW - 2 * wall - 14)/4 - 7, -outH/2 + wall/2, 0);
-            botLeft.castShadow = true;
-            botLeft.userData = { id: 'case_frame' };
-            pickableObjects.push(botLeft);
-            frame3DGroup.add(botLeft);
+            frameShape.moveTo(-w2 + r, -h2);
+            frameShape.lineTo(w2 - r, -h2);
+            frameShape.quadraticCurveTo(w2, -h2, w2, -h2 + r);
+            frameShape.lineTo(w2, h2 - r);
+            frameShape.quadraticCurveTo(w2, h2, w2 - r, h2);
+            frameShape.lineTo(-w2 + r, h2);
+            frameShape.quadraticCurveTo(-w2, h2, -w2, h2 - r);
+            
+            // Down to bottom-left corner with integrated security lug lobe
+            frameShape.lineTo(-w2, lugY + 5);
+            frameShape.quadraticCurveTo(lugX - 4.5, lugY + 4, lugX - 4.5, lugY);
+            frameShape.quadraticCurveTo(lugX - 4.5, lugY - 4, -w2 + 3, -h2);
+            frameShape.closePath();
 
-            const botRight = new THREE.Mesh(botLeftGeom, frame3DMat);
-            botRight.position.set((outW - 2 * wall - 14)/4 + 7, -outH/2 + wall/2, 0);
-            botRight.castShadow = true;
-            botRight.userData = { id: 'case_frame' };
-            pickableObjects.push(botRight);
-            frame3DGroup.add(botRight);
+            // 2. Hole 1: 100% Hollow Center Cavity (Clockwise)
+            const centerHole = new THREE.Path();
+            centerHole.moveTo(-iw2, ih2);
+            centerHole.lineTo(iw2, ih2);
+            centerHole.lineTo(iw2, -ih2);
+            centerHole.lineTo(-iw2, -ih2);
+            centerHole.closePath();
+            frameShape.holes.push(centerHole);
 
-            // 3. Left Wall (with lateral magnet cutout window)
-            const sideGeom = new THREE.BoxGeometry(wall, (outH - 2 * wall - 10)/2, depth);
-            const leftTop = new THREE.Mesh(sideGeom, frame3DMat);
-            leftTop.position.set(-outW/2 + wall/2, (outH - 2 * wall - 10)/4 + 5, 0);
-            leftTop.castShadow = true;
-            leftTop.userData = { id: 'case_frame' };
-            pickableObjects.push(leftTop);
-            frame3DGroup.add(leftTop);
-
-            const leftBot = new THREE.Mesh(sideGeom, frame3DMat);
-            leftBot.position.set(-outW/2 + wall/2, -(outH - 2 * wall - 10)/4 - 5, 0);
-            leftBot.castShadow = true;
-            leftBot.userData = { id: 'case_frame' };
-            pickableObjects.push(leftBot);
-            frame3DGroup.add(leftBot);
-
-            // 4. Right Wall (with lateral magnet cutout window)
-            const rightTop = new THREE.Mesh(sideGeom, frame3DMat);
-            rightTop.position.set(outW/2 - wall/2, (outH - 2 * wall - 10)/4 + 5, 0);
-            rightTop.castShadow = true;
-            rightTop.userData = { id: 'case_frame' };
-            pickableObjects.push(rightTop);
-            frame3DGroup.add(rightTop);
-
-            const rightBot = new THREE.Mesh(sideGeom, frame3DMat);
-            rightBot.position.set(outW/2 - wall/2, -(outH - 2 * wall - 10)/4 - 5, 0);
-            rightBot.castShadow = true;
-            rightBot.userData = { id: 'case_frame' };
-            pickableObjects.push(rightBot);
-            frame3DGroup.add(rightBot);
-
-            // 5. Four Rounded Corner Columns - PROPERLY ROTATED ALONG Z-AXIS
-            const cornerGeom = new THREE.CylinderGeometry(3.2, 3.2, depth, 20);
-            const corners = [[-sX, sY], [sX, sY], [-sX, -sY], [sX, -sY]];
-            corners.forEach(([cx, cy]) => {
-                const cornerCol = new THREE.Mesh(cornerGeom, frame3DMat);
-                cornerCol.rotation.x = Math.PI / 2; // ALIGNED ALONG Z-AXIS FOR SCREW PASSAGE
-                cornerCol.position.set(cx, cy, 0);
-                cornerCol.castShadow = true;
-                cornerCol.userData = { id: 'case_frame' };
-                pickableObjects.push(cornerCol);
-                frame3DGroup.add(cornerCol);
+            // 3. Holes 2-5: 4 Corner Screw Bores Ø 3.2 mm (Clockwise)
+            const screwRad = SSOT.case.screwRadius;
+            [[-sX, sY], [sX, sY], [-sX, -sY], [sX, -sY]].forEach(([cx, cy]) => {
+                const sp = new THREE.Path();
+                for (let i = 0; i <= 16; i++) {
+                    const theta = - (i / 16) * Math.PI * 2;
+                    const x = cx + Math.cos(theta) * screwRad;
+                    const y = cy + Math.sin(theta) * screwRad;
+                    if (i === 0) sp.moveTo(x, y);
+                    else sp.lineTo(x, y);
+                }
+                sp.closePath();
+                frameShape.holes.push(sp);
             });
 
-            // 6. Security Wire Anchor Ring on Bottom-Left Corner - PROPERLY ROTATED ALONG Z-AXIS
-            const lugGeom = new THREE.CylinderGeometry(4.0, 4.0, depth, 20);
-            const lug = new THREE.Mesh(lugGeom, frame3DMat);
-            lug.rotation.x = Math.PI / 2; // ALIGNED ALONG Z-AXIS
-            lug.position.set(SSOT.case.wireLugX - 2.5, SSOT.case.wireLugY, 0);
-            lug.userData = { id: 'case_frame' };
-            pickableObjects.push(lug);
-            frame3DGroup.add(lug);
+            // 4. Hole 6: Security Wire Eyelet Ø 3.8 mm (Clockwise)
+            const wireEyelet = new THREE.Path();
+            for (let i = 0; i <= 16; i++) {
+                const theta = - (i / 16) * Math.PI * 2;
+                const x = lugX + Math.cos(theta) * 1.9;
+                const y = lugY + Math.sin(theta) * 1.9;
+                if (i === 0) wireEyelet.moveTo(x, y);
+                else wireEyelet.lineTo(x, y);
+            }
+            wireEyelet.closePath();
+            frameShape.holes.push(wireEyelet);
+
+            // 5. Extrude into a SINGLE Unified Solid 3D Printed Mesh
+            const frameGeom = new THREE.ExtrudeGeometry(frameShape, {
+                depth: depth,
+                bevelEnabled: true,
+                bevelSize: 0.35,
+                bevelThickness: 0.35,
+                bevelSegments: 2
+            });
+            frameGeom.center();
+
+            const unifiedFrameMesh = new THREE.Mesh(frameGeom, frame3DMat);
+            unifiedFrameMesh.position.set(0, 0, 0);
+            unifiedFrameMesh.castShadow = true;
+            unifiedFrameMesh.receiveShadow = true;
+            unifiedFrameMesh.userData = { id: 'case_frame' };
+            pickableObjects.push(unifiedFrameMesh);
+            frame3DGroup.add(unifiedFrameMesh);
+
+            // Print / Layer edge highlight lines on the single body
+            const frameEdges = new THREE.EdgesGeometry(frameGeom, 28);
+            const frameEdgeMat = new THREE.LineBasicMaterial({ color: 0x64748b, transparent: true, opacity: 0.5 });
+            const frameEdgeLines = new THREE.LineSegments(frameEdges, frameEdgeMat);
+            frameEdgeLines.position.copy(unifiedFrameMesh.position);
+            frame3DGroup.add(frameEdgeLines);
         }
 
         /* --- 4.3 BUILD CRYSTAL CLEAR ACRYLIC COVERS WITH LASER CUTOUT HIGHLIGHTS --- */
