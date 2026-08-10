@@ -1128,10 +1128,10 @@
             rightSocketG.translate(outW/2 + 0.6, 0, 0);
             frameParts.push(rightSocketG);
 
-            // 7. Integrated Security Wire Anchor Ear (Extended cleanly to bottom-left)
-            const lugG = new THREE.CylinderGeometry(3.6, 3.6, depth, 24);
+            // 7. Integrated Security Wire Anchor Ear (Unified strictly on the bottom-left corner)
+            const lugG = new THREE.CylinderGeometry(3.5, 3.5, depth, 24);
             lugG.rotateX(Math.PI / 2);
-            lugG.translate(-38.5, -46.5, 0);
+            lugG.translate(-37.2, -43.8, 0);
             frameParts.push(lugG);
 
             // 8. Merge ALL geometries into ONE SINGLE UNIFIED CONTINUOUS MONOLITHIC RING
@@ -1144,6 +1144,26 @@
             unifiedFrameMesh.userData = { id: 'case_frame' };
             pickableObjects.push(unifiedFrameMesh);
             frame3DGroup.add(unifiedFrameMesh);
+
+            // Distinct Visual Bore for the Security Wire Hole (Ø 2.4 mm through-bore)
+            const secHoleBoreGeom = new THREE.CylinderGeometry(1.2, 1.2, depth + 0.3, 16);
+            const secHoleBore = new THREE.Mesh(secHoleBoreGeom, blackPlasticMat);
+            secHoleBore.rotation.x = Math.PI / 2;
+            secHoleBore.position.set(-37.2, -43.8, 0);
+            frame3DGroup.add(secHoleBore);
+
+            // Chamfered brass eyelet insert ring around the security hole
+            const secEyeletGeom = new THREE.CylinderGeometry(1.9, 1.9, depth + 0.1, 20);
+            const secEyelet = new THREE.Mesh(secEyeletGeom, brassGlandMat);
+            secEyelet.rotation.x = Math.PI / 2;
+            secEyelet.position.set(-37.2, -43.8, 0);
+            frame3DGroup.add(secEyelet);
+
+            // Distinct Visual Bore for the Bottom Power Entry Port (Ø 3.6 mm bottom bore)
+            const pwrPortGeom = new THREE.CylinderGeometry(1.6, 1.6, 3.0, 16);
+            const pwrPort = new THREE.Mesh(pwrPortGeom, blackPlasticMat);
+            pwrPort.position.set(-33.8, -outH/2 + 1.0, 0);
+            frame3DGroup.add(pwrPort);
 
             // Subtle print/edge highlight lines on the unified frame
             const frameEdges = new THREE.EdgesGeometry(unifiedFrameGeom, 32);
@@ -1410,41 +1430,26 @@
 
         /* --- 4.5 BUILD COMBINED BIFILAR POWER CABLE (5V/3.3V) & STEEL SECURITY TETHER --- */
         function buildPowerAndSecurityHarness() {
-            const lugX = -38.5;  // Anchor ear X (Clean separation from corner screw at -33.8)
-            const lugY = -46.5;  // Anchor ear Y
-            const glandX = -22.0; // Power gland X on bottom frame face
-            const glandY = -47.6; // Bottom frame outer surface (outH / 2 = 47.6 mm)
-            const depth = SSOT.case.frameDepth;
+            const lugX = -37.2;   // Security eyelet X (Unified strictly on bottom-left corner)
+            const lugY = -43.8;   // Security eyelet Y
+            const glandX = -33.8; // Power entry X (Directly under bottom-left corner)
+            const glandY = -47.6; // Bottom wall outer surface (-outH / 2 = -47.6 mm)
 
-            // 1. Brass Reinforcing Eyelet Bushing (Flush inside 3D printed anchor ear)
-            const bushingGeom = new THREE.CylinderGeometry(2.4, 2.4, depth + 0.1, 20);
-            const bushing = new THREE.Mesh(bushingGeom, brassGlandMat);
-            bushing.rotation.x = Math.PI / 2;
-            bushing.position.set(lugX, lugY, 0);
-            frame3DGroup.add(bushing);
-
-            // Dark inner bore hole of the brass bushing
-            const boreGeom = new THREE.CylinderGeometry(1.4, 1.4, depth + 0.3, 16);
-            const bore = new THREE.Mesh(boreGeom, blackPlasticMat);
-            bore.rotation.x = Math.PI / 2;
-            bore.position.set(lugX, lugY, 0);
-            frame3DGroup.add(bore);
-
-            // 2. Brass Threaded Strain Relief Cable Gland (Mounted flush against bottom frame wall)
-            const glandGeom = new THREE.CylinderGeometry(2.6, 2.6, 4.5, 16);
+            // 1. Brass Threaded Strain Relief Cable Gland (Mounted flush on bottom corner entry hole)
+            const glandGeom = new THREE.CylinderGeometry(2.5, 2.5, 4.0, 16);
             const gland = new THREE.Mesh(glandGeom, brassGlandMat);
-            gland.position.set(glandX, glandY - 2.25, 0);
+            gland.position.set(glandX, glandY - 2.0, 0);
             gland.userData = { id: 'power_cable' };
             pickableObjects.push(gland);
             securityWireGroup.add(gland);
 
-            // 3. Main External Braided Cable Harness (Sheath bundle rising from table straight into gland)
+            // 2. Main External Braided Cable Harness (Sheath bundle rising from table into corner gland)
             const harnessPoints = [
-                new THREE.Vector3(glandX, glandY - 4.5, 0),
-                new THREE.Vector3(glandX + 1.0, glandY - 15.0, 0),
-                new THREE.Vector3(glandX - 2.0, glandY - 30.0, 8),
-                new THREE.Vector3(glandX - 8.0, glandY - 48.0, 16),
-                new THREE.Vector3(glandX - 12.0, -75.0, 22)
+                new THREE.Vector3(glandX, glandY - 4.0, 0),
+                new THREE.Vector3(glandX - 1.0, glandY - 14.0, 0),
+                new THREE.Vector3(glandX - 4.0, glandY - 30.0, 8),
+                new THREE.Vector3(glandX - 9.0, glandY - 48.0, 16),
+                new THREE.Vector3(glandX - 13.0, -75.0, 22)
             ];
             const harnessCurve = new THREE.CatmullRomCurve3(harnessPoints);
             const harnessGeom = new THREE.TubeGeometry(harnessCurve, 48, 1.8, 12, false);
@@ -1454,16 +1459,16 @@
             pickableObjects.push(harnessMesh);
             securityWireGroup.add(harnessMesh);
 
-            // 4. Braided Stainless Steel Security Cable Loop (Branching from harness into eyelet)
+            // 3. Braided Stainless Steel Security Cable Loop (Passing through the 3D corner through-hole)
             const steelLoopPoints = [
-                new THREE.Vector3(glandX + 0.5, glandY - 14.0, 0),   // Branches off from main harness
-                new THREE.Vector3(lugX + 4.0, glandY - 8.0, 0),      // Curves toward anchor ear
-                new THREE.Vector3(lugX, lugY - 5.0, 0),              // Enters aluminum crimp ferrule
-                new THREE.Vector3(lugX, lugY, 0),                    // Passes through center of brass bushing
-                new THREE.Vector3(lugX - 3.2, lugY + 2.0, 0),        // Loops 180° around bushing edge
-                new THREE.Vector3(lugX - 4.5, lugY - 1.5, 0),        // Loops downward
-                new THREE.Vector3(lugX - 1.8, lugY - 5.0, 0),        // Returns into aluminum ferrule
-                new THREE.Vector3(lugX - 1.8, lugY - 7.5, 0)         // Terminal crimped wire tail
+                new THREE.Vector3(glandX - 1.0, glandY - 9.0, 0),    // Branches off below the gland
+                new THREE.Vector3(lugX + 1.0, glandY - 5.0, 0),      // Curves toward corner eyelet
+                new THREE.Vector3(lugX, lugY - 4.0, 0),              // Enters aluminum crimp ferrule
+                new THREE.Vector3(lugX, lugY, 0),                    // Passes through center of 3D through-hole
+                new THREE.Vector3(lugX - 2.5, lugY + 1.8, 0),        // Loops 180° around outer ear edge
+                new THREE.Vector3(lugX - 3.6, lugY - 1.0, 0),        // Loops downward
+                new THREE.Vector3(lugX - 1.4, lugY - 4.0, 0),        // Returns into aluminum ferrule
+                new THREE.Vector3(lugX - 1.4, lugY - 6.5, 0)         // Terminal crimped wire tail
             ];
             const steelLoopCurve = new THREE.CatmullRomCurve3(steelLoopPoints);
             const steelLoopGeom = new THREE.TubeGeometry(steelLoopCurve, 40, 0.55, 8, false);
@@ -1473,19 +1478,19 @@
             securityWireGroup.add(steelLoopMesh);
 
             // Sleek Aluminum Double-Barrel Crimp Ferrule
-            const ferruleGeom = new THREE.CylinderGeometry(1.6, 1.6, 4.2, 16);
+            const ferruleGeom = new THREE.CylinderGeometry(1.4, 1.4, 3.8, 16);
             const ferrule1 = new THREE.Mesh(ferruleGeom, securityScrewMat);
-            ferrule1.position.set(lugX - 0.9, lugY - 5.2, 0);
+            ferrule1.position.set(lugX - 0.7, lugY - 4.2, 0);
             ferrule1.userData = { id: 'power_cable' };
             pickableObjects.push(ferrule1);
             securityWireGroup.add(ferrule1);
 
-            // 5. Internal Bifilar Power Conductors (Inside Case: Red +5V/3.3V and Black GND)
-            // RED WIRE (VCC +5V / +3.3V) -> Enters through bottom gland directly onto Perfboard VCC pad
+            // 4. Internal Bifilar Power Conductors (Inside Case: Red +5V/3.3V and Black GND)
+            // RED WIRE (VCC +5V / +3.3V) -> Enters through bottom corner hole directly to Perfboard VCC pad
             const redWirePoints = [
                 new THREE.Vector3(glandX, glandY + 2.0, 0),
-                new THREE.Vector3(glandX + 1.0, -42.0, 0.8),
-                new THREE.Vector3(-22.0, -38.0, 1.0)
+                new THREE.Vector3(glandX + 2.0, -42.0, 0.8),
+                new THREE.Vector3(-25.0, -38.0, 1.0)
             ];
             const redCurve = new THREE.CatmullRomCurve3(redWirePoints);
             const redWireGeom = new THREE.TubeGeometry(redCurve, 20, 0.42, 8, false);
@@ -1494,11 +1499,11 @@
             pickableObjects.push(redWireMesh);
             frontElectronicsGroup.add(redWireMesh);
 
-            // BLACK WIRE (GND / 0V) -> Enters through bottom gland directly onto Perfboard GND pad
+            // BLACK WIRE (GND / 0V) -> Enters through bottom corner hole directly to Perfboard GND pad
             const blackWirePoints = [
                 new THREE.Vector3(glandX, glandY + 2.0, 0),
-                new THREE.Vector3(glandX - 2.0, -42.0, 0.8),
-                new THREE.Vector3(-26.0, -38.0, 1.0)
+                new THREE.Vector3(glandX - 1.0, -42.0, 0.8),
+                new THREE.Vector3(-28.0, -38.0, 1.0)
             ];
             const blackCurve = new THREE.CatmullRomCurve3(blackWirePoints);
             const blackWireGeom = new THREE.TubeGeometry(blackCurve, 20, 0.42, 8, false);
@@ -1508,8 +1513,8 @@
             frontElectronicsGroup.add(blackWireMesh);
 
             // Silver Solder Joints where power connects into the perfboard
-            frontElectronicsGroup.add(createSolderJoint(-22.0, -38.0, 1.0));
-            frontElectronicsGroup.add(createSolderJoint(-26.0, -38.0, 1.0));
+            frontElectronicsGroup.add(createSolderJoint(-25.0, -38.0, 1.0));
+            frontElectronicsGroup.add(createSolderJoint(-28.0, -38.0, 1.0));
         }
 
         /* --- 4.6 BUILD EXTERNAL NEODYMIUM MAGNETS & PASS-THROUGH WIRING --- */
