@@ -1091,7 +1091,7 @@
             return merged;
         }
 
-        /* --- 4.2 BUILD 3D PRINTED MIDDLE GRAY PERIMETER FRAME (1 SINGLE MONOLITHIC HOLLOW PIECE) --- */
+        /* --- 4.2 BUILD 3D PRINTED MIDDLE GRAY PERIMETER FRAME (100% CONTINUOUS CLOSED MONOLITHIC RING) --- */
         function build3DPrintedFrame() {
             const outW = SSOT.case.outerWidth;    // 75.2 mm
             const outH = SSOT.case.outerHeight;   // 95.2 mm
@@ -1104,39 +1104,25 @@
 
             const frameParts = [];
 
-            // 1. Top Wall
+            // 1. Top Wall (Continuous full-width solid bar)
             const topG = new THREE.BoxGeometry(outW - 2 * wall, wall, depth);
             topG.translate(0, outH/2 - wall/2, 0);
             frameParts.push(topG);
 
-            // 2. Bottom Wall (Left and Right of USB Slot)
-            const botLen = (outW - 2 * wall - 14) / 2;
-            const botLeftG = new THREE.BoxGeometry(botLen, wall, depth);
-            botLeftG.translate(-botLen/2 - 7, -outH/2 + wall/2, 0);
-            frameParts.push(botLeftG);
+            // 2. Bottom Wall (Continuous full-width solid bar - NO GAPS)
+            const botG = new THREE.BoxGeometry(outW - 2 * wall, wall, depth);
+            botG.translate(0, -outH/2 + wall/2, 0);
+            frameParts.push(botG);
 
-            const botRightG = new THREE.BoxGeometry(botLen, wall, depth);
-            botRightG.translate(botLen/2 + 7, -outH/2 + wall/2, 0);
-            frameParts.push(botRightG);
+            // 3. Left Wall (Continuous full-height solid bar - NO GAPS)
+            const leftG = new THREE.BoxGeometry(wall, outH - 2 * wall, depth);
+            leftG.translate(-outW/2 + wall/2, 0, 0);
+            frameParts.push(leftG);
 
-            // 3. Left Wall (Top and Bottom of Magnet Window)
-            const sideLen = (outH - 2 * wall - 10) / 2;
-            const leftTopG = new THREE.BoxGeometry(wall, sideLen, depth);
-            leftTopG.translate(-outW/2 + wall/2, sideLen/2 + 5, 0);
-            frameParts.push(leftTopG);
-
-            const leftBotG = new THREE.BoxGeometry(wall, sideLen, depth);
-            leftBotG.translate(-outW/2 + wall/2, -sideLen/2 - 5, 0);
-            frameParts.push(leftBotG);
-
-            // 4. Right Wall (Top and Bottom of Magnet Window)
-            const rightTopG = new THREE.BoxGeometry(wall, sideLen, depth);
-            rightTopG.translate(outW/2 - wall/2, sideLen/2 + 5, 0);
-            frameParts.push(rightTopG);
-
-            const rightBotG = new THREE.BoxGeometry(wall, sideLen, depth);
-            rightBotG.translate(outW/2 - wall/2, -sideLen/2 - 5, 0);
-            frameParts.push(rightBotG);
+            // 4. Right Wall (Continuous full-height solid bar - NO GAPS)
+            const rightG = new THREE.BoxGeometry(wall, outH - 2 * wall, depth);
+            rightG.translate(outW/2 - wall/2, 0, 0);
+            frameParts.push(rightG);
 
             // 5. Four Corner Rounded Boss Columns (Oriented along Z-axis)
             const corners = [[-sX, sY], [sX, sY], [-sX, -sY], [sX, -sY]];
@@ -1147,13 +1133,13 @@
                 frameParts.push(colG);
             });
 
-            // 6. Integrated Security Wire Lug
+            // 6. Integrated Security Wire Lug (Bottom-Left Corner)
             const lugG = new THREE.CylinderGeometry(4.0, 4.0, depth, 20);
             lugG.rotateX(Math.PI / 2);
             lugG.translate(lugX, lugY, 0);
             frameParts.push(lugG);
 
-            // 7. Merge ALL geometries into ONE SINGLE UNIFIED MONOLITHIC BODY
+            // 7. Merge ALL geometries into ONE SINGLE UNIFIED CONTINUOUS MONOLITHIC RING
             const unifiedFrameGeom = mergeBufferGeometries(frameParts);
 
             const unifiedFrameMesh = new THREE.Mesh(unifiedFrameGeom, frame3DMat);
