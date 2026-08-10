@@ -1,0 +1,43 @@
+[1:04 a. m., 4/7/2026] Manuslaton Rr: che, sry la hora, recien post partido y bañar a los chicos y dormirlos me pude poner, te voy a tirar todo lo mas ordenado que pueda para que quede claro que esta hecho, a que corresponde y que falta. Mañana am lo vamos charlando pero de aca creo que solo faltaria que:
+- yo saque unas fotos del proto que tengo armado
+- armar una carpeta de drive para poner el pdf y las imagenes.
+- promptear imagenes (mas info abajo) y agregarlas con claude o ai assisted al pdf en cada seccion que corresponda con un script que adjunto al final
+CONTENIDO PARA CADA INPUT DEL FORMULARIO DE INTERVENCIONES EN EL ESPACIO
+CONTENIDO PARA CADA INPUT DEL FORMULARIO DE NERD
+[1:08 a. m., 4/7/2026] Manuslaton Rr: hacemos una carpeta de drive con estos directorios y contenido:
+umwelt_emergentes2026/            <- este link va en AMBOS formularios (Ne:RD e Intervenciones)
+│
+├── 00_LEEME.txt                  ⬜ 1 párrafo: qué es umwelt + índice de la carpeta
+│
+├── 01_dossier/
+│   └── umwelt_dossier.pdf        ✅ hecho (cuando tengas las imágenes, lo regenero con ellas)
+│
+├── 02_prototipo/                 <- lo REAL, lo que más pesa ante el jurado
+│   ├── fotos_placa/              ✅ ya tenés (las 6 placas, el perfboard con cable, el hero azul)
+│   └── video_prototipo.mp4       ⬜ 1-2 min: pantalla reaccionando a voz/música + plano del bicho
+│
+├── 03_habitat/
+│   ├── render_mesa_nidos.png     ✅ generado (la vista sobria elegida)
+│   └── atmosferas_descartadas/   🔄 las 2 nuevas en línea técnica (musgo / chatarra)
+│
+├── 04_acople/
+│   ├── diagrama_acople.png       🔄 regenerar (placas planas, no blobs)
+│   └── video_acople.mp4          ⬜ opcional, si llegás a prototipar el acople
+│
+├── 05_sentidos/
+│   └── retratos_7_sentidos.png   🔄 regenerar en línea técnica
+│
+└── 06_proceso_RE/
+    └── captura_desensamblado.png ⬜ screenshot del pixicode_dis.py + firmware
+
+(te va a quedar mas claro lo de las imagenes que tiene emoji de 🔄 y ✅ en los sig msjs)
+este es el principal doc imho
+
+Vas a ver que adentro tiene recuadros grises donde irian imagenes. Algunos de estos recuadros abajo tiene un “Prompt IA sugerido”, eso es algo que yo labure rapidamente para alinear a una estetica visual que me parece ok y que todos mas o menos se vean igual, habria que promptearlos y agregarlos al pdf (y una vez agregados, obviamente, limpiar esos recuadros grises y el texto del prompt)
+
+Tambien vas a ver que algunos tienen recuadros y abajo dicen “Material real a capturar”, esos son los que yo tengo que hacer imagenes mañana am para poder poner (vids tmb y los metemos en el drive sueltos)
+
+y como ultimo respecto a imagenes; faltaria lo de imagenes del proceso de “ingenieria inversa”, lo vas a ver.
+SCRIPT PARA MODIFICAR EL PDF (el robot lo deberia entender de taquito)
+[1:17 a. m., 4/7/2026] Manuslaton Rr: cualquier cosa mañana am hablamos yo creo que puedo tener un toque a la mañana para conectarnos, si no en lo de flopa pero ya se nos pega mucho con el domingo
+[1:17 a. m., 4/7/2026] Manuslaton Rr: gngm

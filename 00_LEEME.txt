@@ -1,0 +1,35 @@
+umwelt
+Colonia de organismos electrónicos sensoriales
+Material complementario de la postulación a Emergentes 2026 (CEC Rosario)
+Manuel Rodríguez Roldán y Juan Ignacio Miles
+
+
+QUÉ ES
+
+umwelt es una colonia de ocho a doce organismos electrónicos mínimos, hechos a mano
+y con el circuito a la vista. Cada bicho posee un único sentido: uno oye, otro siente
+el calor de los cuerpos, otro la radiación de los teléfonos, otro el aliento de la
+sala, otro percibe que lo alzan. No nos reconocen ni nos registran: nos sienten, como
+clima, y olvidan cada segundo. Los bichos también se sienten entre sí por radio, y al
+acercar dos de ellos sus mundos se contaminan. El motor gráfico corre íntegramente en
+el microcontrolador, sin computadoras, y nació de meses de ingeniería inversa de un
+visualizador ajeno (Quantum VJ, de Alexander Zolotov) reescrito como firmware propio.
+El proyecto está en desarrollo: hay un prototipo funcional; la colonia completa se
+produce tras la selección.
+
+
+CONTENIDO DE ESTA CARPETA
+
+01_dossier/        Dossier conceptual en PDF (statement, sentidos, hábitat, acople,
+                   proceso y bibliografía). Empezar por acá.
+02_prototipo/      Fotos y video del prototipo actual funcionando (material real).
+03_habitat/        Render del hábitat sobre mesa, y las atmósferas exploradas y
+                   descartadas (proceso de diseño).
+04_acople/         Diagrama del gesto de acople entre dos organismos.
+05_sentidos/       Los siete sentidos de la colonia.
+06_proceso_RE/     Captura de la ingeniería inversa del motor gráfico.
+
+
+CONTACTO
+
+COMPLETAR: correo y teléfono de contacto.

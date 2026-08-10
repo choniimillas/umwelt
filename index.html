@@ -1,0 +1,1978 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>umwelt — Organismo Sensorial 3D (Sentido: Oído) | Case de Seguridad & Acrílico</title>
+    <!-- Three.js & OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-deep: #060911;
+            --panel-bg: rgba(13, 18, 30, 0.86);
+            --panel-border: rgba(56, 189, 248, 0.25);
+            --primary: #38bdf8;
+            --primary-glow: rgba(56, 189, 248, 0.4);
+            --accent-amber: #f59e0b;
+            --accent-green: #10b981;
+            --accent-purple: #a855f7;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --case-gray: #475569;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #webgl-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Glassmorphism Panels */
+        .hud-panel {
+            position: absolute;
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            z-index: 10;
+            pointer-events: auto;
+            transition: all 0.3s ease;
+        }
+
+        /* Header HUD */
+        .hud-header {
+            top: 20px;
+            left: 24px;
+            padding: 16px 22px;
+            max-width: 480px;
+        }
+
+        .hud-header .badge-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--primary);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 8px;
+        }
+
+        .hud-header .badge-tag .pulse-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green);
+            animation: pulse-glow 1.8s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.6; }
+        }
+
+        .hud-header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hud-header p {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            line-height: 1.45;
+        }
+
+        /* Technical Inspector Card (Right Side) */
+        .hud-inspector {
+            top: 20px;
+            right: 24px;
+            width: 350px;
+            padding: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        .hud-inspector::-webkit-scrollbar { width: 4px; }
+        .hud-inspector::-webkit-scrollbar-thumb {
+            background: rgba(56, 189, 248, 0.3);
+            border-radius: 4px;
+        }
+
+        .inspector-title {
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+
+        .component-card-active {
+            background: rgba(56, 189, 248, 0.06);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 14px;
+        }
+
+        .component-card-active h3 {
+            font-size: 15.5px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .component-card-active .part-loc {
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-amber);
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .component-card-active p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            line-height: 1.45;
+        }
+
+        .specs-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+        }
+
+        .spec-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 8px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 6px;
+        }
+
+        .spec-item .label { color: var(--text-muted); }
+        .spec-item .val { color: var(--primary); font-weight: 600; }
+
+        /* Quick View Selector & Controls (Bottom HUD) */
+        .hud-controls {
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            max-width: 95vw;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .slider-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 140px;
+        }
+
+        .slider-wrapper label {
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .slider-wrapper input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 5px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.15);
+            outline: none;
+            cursor: pointer;
+        }
+
+        .slider-wrapper input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+        .slider-wrapper input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+        }
+
+        .btn-action {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: var(--text-main);
+            padding: 7px 11px;
+            border-radius: 8px;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            white-space: nowrap;
+        }
+
+        .btn-action:hover {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: var(--primary);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .btn-action.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #04101e;
+            box-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        .divider {
+            width: 1px;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        /* Audio Visualizer Mode Bar (Bottom Left) */
+        .hud-audiomode {
+            bottom: 24px;
+            left: 24px;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 220px;
+        }
+
+        .hud-audiomode .title {
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .mode-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .chip {
+            font-size: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .chip.active, .chip:hover {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: var(--accent-amber);
+            color: #fff;
+        }
+
+        /* 3D Cursor Hover Tooltip */
+        #tooltip-3d {
+            position: absolute;
+            display: none;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--primary);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            color: #fff;
+            pointer-events: none;
+            z-index: 100;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+            transform: translate(12px, 12px);
+        }
+
+        .cad-badge {
+            display: inline-block;
+            background: #1e293b;
+            color: #38bdf8;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            border: 1px solid #38bdf8;
+        }
+
+        @media (max-width: 1024px) {
+            .hud-inspector { display: none; }
+            .hud-header { max-width: calc(100vw - 48px); }
+            .hud-audiomode { display: none; }
+            .hud-controls { width: calc(100vw - 32px); bottom: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Canvas -->
+    <div id="webgl-canvas"></div>
+    <div id="tooltip-3d"></div>
+
+    <!-- HUD Header -->
+    <div class="hud-panel hud-header">
+        <div class="badge-tag">
+            <span class="pulse-dot"></span>
+            <span>umwelt — CASE DE SEGURIDAD // SLIM 3D + ACRÍLICO</span>
+        </div>
+        <h1>
+            <span>Enclosure de Seguridad 3D</span>
+            <span class="cad-badge">75×95×21 mm (Slim)</span>
+        </h1>
+        <p>El <strong>marco 3D gris perimetral ultra fino (2.5 mm)</strong> abraza la placa por los lados. Las tapas de <strong>acrílico cristal 3mm</strong> tienen los calados concéntricos de pantalla y micrófono, con tornillos Torx pasantes en el eje Z.</p>
+    </div>
+
+    <!-- HUD Technical Inspector -->
+    <div class="hud-panel hud-inspector" id="inspector-panel">
+        <div class="inspector-title">
+            <span>Inspector de Componentes</span>
+            <span id="selected-id">CASE / ENSAMBLE</span>
+        </div>
+
+        <div class="component-card-active" id="comp-card">
+            <h3 id="comp-title">Marco Perimetral 3D + Acrílicos</h3>
+            <div class="part-loc" id="comp-side">ESTRUCTURA DE PROTECCIÓN PERIMETRAL</div>
+            <p id="comp-desc">Bisel perimetral hueco impreso en 3D (gris técnico) que contiene lateralmente la placa de 70×90 mm. Las caras frontal y trasera son láminas de acrílico cristal transparente de 3 mm.</p>
+        </div>
+
+        <div class="specs-grid" id="comp-specs">
+            <div class="spec-item">
+                <span class="label">Dimensiones Exteriores:</span>
+                <span class="val" id="spec-dim">80.0 × 100.0 × 22.0 mm</span>
+            </div>
+            <div class="spec-item">
+                <span class="label">Abertura Central:</span>
+                <span class="val" id="spec-pocket">70.4 × 90.4 mm (Hueco 100%)</span>
+            </div>
+            <div class="spec-item">
+                <span class="label">Tapas de Acrílico:</span>
+                <span class="val" id="spec-acrylic">PMMA Cristal 3.0 mm (Ultra claro)</span>
+            </div>
+            <div class="spec-item">
+                <span class="label">Marco 3D (Paredes):</span>
+                <span class="val" id="spec-frame">Espesor de pared 4.8 mm</span>
+            </div>
+            <div class="spec-item">
+                <span class="label">Tornillos Seguridad:</span>
+                <span class="val" id="spec-fastener">4× M3×22 mm Torx con pin</span>
+            </div>
+            <div class="spec-item">
+                <span class="label">Lazo de Seguridad:</span>
+                <span class="val" id="spec-security">Cable de acero anclado a mesa</span>
+            </div>
+        </div>
+
+        <!-- Connection Pinout Map -->
+        <div style="margin-top: 14px;">
+            <div class="inspector-title" style="margin-bottom: 8px;">
+                <span>Detalles de Calado y Montaje</span>
+            </div>
+            <div class="specs-grid" id="pin-specs">
+                <div class="spec-item">
+                    <span class="label">Ventana Pantalla:</span>
+                    <span class="val" style="color:#38bdf8;">Calado directo 38×50 mm</span>
+                </div>
+                <div class="spec-item">
+                    <span class="label">Puerto Micrófono:</span>
+                    <span class="val" style="color:#10b981;">Orificio pasante Ø 8.5 mm</span>
+                </div>
+                <div class="spec-item">
+                    <span class="label">Ventanas de Acople:</span>
+                    <span class="val" style="color:#f59e0b;">Ranuras para imanes Ø 5.0 mm</span>
+                </div>
+                <div class="spec-item">
+                    <span class="label">Visibilidad Electrónica:</span>
+                    <span class="val" style="color:#a855f7;">100% visible frente y dorso</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HUD Bottom Controls (Exploded slider, Views, Wireframe, Cotas) -->
+    <div class="hud-panel hud-controls">
+        <div class="control-group">
+            <div class="slider-wrapper">
+                <label>
+                    <span>Despiece (Exploded Z)</span>
+                    <strong id="explode-num" style="color:var(--primary);">0 mm</strong>
+                </label>
+                <input type="range" id="explode-slider" min="0" max="80" value="0" step="0.5">
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="control-group">
+            <button class="btn-action" id="btn-front" onclick="setView('front')">Frente (Pantalla+Mic)</button>
+            <button class="btn-action" id="btn-back" onclick="setView('back')">Dorso (ESP32)</button>
+            <button class="btn-action" id="btn-iso" onclick="setView('iso')">Perspectiva 3D</button>
+            <button class="btn-action" id="btn-side" onclick="setView('side')">Perfil Lateral</button>
+            <button class="btn-action" id="btn-screw" onclick="setView('screw')" style="border-color:rgba(56,189,248,0.5);">🔩 Zoom Tornillos M3</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="control-group">
+            <button class="btn-action active" id="btn-case" onclick="toggleCaseVisibility()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Ver Case
+            </button>
+            <button class="btn-action" id="btn-glass" onclick="cycleGlassOpacity()">
+                Acrílico: <strong id="glass-mode-label" style="color:var(--primary);margin-left:3px;">Cristal (22%)</strong>
+            </button>
+            <button class="btn-action" id="btn-cotas" onclick="toggleCotas()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 6H3M21 18H3M6 21V3M18 21V3"/></svg>
+                Cotas CAD
+            </button>
+            <button class="btn-action" id="btn-turntable" onclick="toggleTurntable()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                Giro 360°
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript 3D Engine -->
+    <script>
+        /* -------------------------------------------------------------
+           1. SINGLE SOURCE OF TRUTH (SSOT) - DIMENSIONS & HARDWARE DATA
+           ------------------------------------------------------------- */
+        const SSOT = {
+            perfboard: {
+                width: 70.0,   // mm (X axis)
+                height: 90.0,  // mm (Y axis)
+                thickness: 1.6,// mm (Z axis)
+                pitch: 2.54,
+                holeDia: 1.0,
+                cornerHoleDia: 3.2,
+                cornerMargin: 4.0
+            },
+            case: {
+                // Sleek, Minimalist 3D Printed Frame (Thin-walled, low material)
+                outerWidth: 75.2,   // 70.0 + 2 * 2.6 mm
+                outerHeight: 95.2,  // 90.0 + 2 * 2.6 mm
+                innerWidth: 70.2,   // Snug fit for 70x90 perfboard
+                innerHeight: 90.2,  // Snug fit for 70x90 perfboard
+                frameDepth: 14.8,   // Z-depth matching component clearance
+                wallThick: 2.5,     // Thin, sleek 2.5 mm perimeter wall
+                acrylicThick: 3.0,  // 3mm laser cut optical acrylic
+                totalDepth: 20.8,   // 14.8 + 3 + 3
+                screwRadius: 1.55,  // M3 bolt
+                screwDistanceX: 33.8,
+                screwDistanceY: 43.8,
+                // Security Wire Eyelet
+                wireLugX: -33.8,
+                wireLugY: -43.8,
+                wireDia: 3.5
+            },
+            display24: {
+                pcbWidth: 42.8,
+                pcbHeight: 60.2,
+                pcbThickness: 1.6,
+                activeWidth: 36.7,
+                activeHeight: 49.0,
+                cutoutWidth: 38.0,
+                cutoutHeight: 50.0,
+                posX: 0.0,
+                posY: 9.0,
+                posZ: 3.0
+            },
+            micSensor: {
+                pcbWidth: 14.0,
+                pcbHeight: 18.0,
+                pcbThickness: 1.2,
+                capsuleDiameter: 6.0,
+                capsuleHeight: 3.5,
+                cutoutDiameter: 7.6, // Concentric with 0.8mm clearance
+                posX: 0.0,
+                posY: -29.0,         // EXACT center of capsule and cutout
+                posZ: 2.6
+            },
+            esp32Micro: {
+                pcbWidth: 26.0,
+                pcbHeight: 49.0,
+                pcbThickness: 1.6,
+                shieldWidth: 18.0,
+                shieldHeight: 18.0,
+                shieldHeightZ: 2.8,
+                posX: 0.0,
+                posY: 0.0,
+                posZ: -3.6
+            },
+            couplingMagnets: {
+                dia: 5.0,
+                thick: 2.0,
+                posX: 34.0,
+                posY: 0.0
+            }
+        };
+
+        // Components Database for Interactive Inspector
+        const COMPONENT_DB = {
+            case_frame: {
+                title: "Marco Perimetral 3D (Gris Técnico)",
+                side: "CHASIS PERIMETRAL LATERAL (HUECO)",
+                desc: "Pieza perimetral hueca y liviana impresa en 3D (PLA/PETG gris técnico). Con un espesor de pared de solo 2.5 mm, abraza la perfboard de 70×90 mm y orienta los tornillos pasantes en el eje Z sin obstruir la vista.",
+                specs: {
+                    "Material": "PETG / PLA Gris Técnico FDM 0.2mm layer",
+                    "Dimensiones": "75.2 × 95.2 × 14.8 mm (Slim)",
+                    "Abertura Central": "70.2 × 90.2 mm (Hueco 100%)",
+                    "Espesor de pared": "2.5 mm de bajo consumo de filamento",
+                    "Ranuras Laterales": "2× Ventanas de acople magnético Ø5mm",
+                    "Salida Inferior": "Alivio para cable USB textil"
+                }
+            },
+            case_front: {
+                title: "Tapa Frontal Acrílico Cristal 3mm",
+                side: "ANVERSO (100% Transparente con Calados)",
+                desc: "Lámina de acrílico cristal (PMMA) ultra transparente de 3 mm cortada por láser. Posee calados directos y concéntricos para la pantalla TFT 2.4\" y el micrófono acústico.",
+                specs: {
+                    "Material": "PMMA Acrílico Cristal Grado Óptico 3.0 mm",
+                    "Dimensiones": "75.2 × 95.2 × 3.0 mm",
+                    "Calado Pantalla": "Ventana directa 38.0 × 50.0 mm",
+                    "Puerto Micrófono": "Orificio concéntrico Ø 7.6 mm",
+                    "Fijación": "4× Orificios en esquinas para tornillos M3"
+                }
+            },
+            case_back: {
+                title: "Tapa Trasera Acrílico Cristal 3mm",
+                side: "REVERSO (100% Transparente)",
+                desc: "Lámina de acrílico cristal de 3 mm que protege el ESP32 Micro y las soldaduras artesanales al dorso, manteniéndolas totalmente visibles como escultura de circuito.",
+                specs: {
+                    "Material": "PMMA Acrílico Cristal Grado Óptico 3.0 mm",
+                    "Dimensiones": "75.2 × 95.2 × 3.0 mm",
+                    "Visibilidad": "100% transparente para ver el ESP32",
+                    "Fijación": "4× Tuercas ciegas de seguridad M3"
+                }
+            },
+            security_screws: {
+                title: "Sistema de Ajuste y Tornillos M3",
+                side: "FIJACIÓN ANTIRROBO SÁNDWICH (5 CAPAS)",
+                desc: "Sistema de prensado mecánico por tornillos pasantes M3×22 mm de acero inoxidable con cabeza Torx Pin inviolable. Incluye arandelas amortiguadoras de nylon/teflón para evitar fracturas en el acrílico de 3mm al dar torque, inserts de latón en el marco 3D y tuercas ciegas abombadas al dorso.",
+                specs: {
+                    "Tornillo": "M3 × 22 mm ISO 7380 Torx Security (Pin central)",
+                    "Arandela Frontal": "Nylon cristal Ø 7×0.6 mm (Antiquiebre)",
+                    "Inserto Marco 3D": "Inserto roscado moleteado de latón M3",
+                    "Arandela Trasera": "Nylon/Teflón para repartir la carga",
+                    "Tuerca de Cierre": "Tuerca ciega abombada M3 de acero inox A2",
+                    "Torque recomendado": "0.35 - 0.45 N·m (Ajuste firme sin fatigar acrílico)"
+                }
+            },
+            power_cable: {
+                title: "Alimentación Bifilar (5V/3.3V) + Correa de Acero",
+                side: "ENTRADA DE ENERGÍA Y ANCLAJE (Esquina)",
+                desc: "Arnés combinado que transporta la alimentación eléctrica de 5V/3.3V y el anclaje mecánico antirobo en una sola funda textil trenzada. Al ingresar por el ojal de la esquina, el lazo de acero se crimpa al marco y los conductores rojo (VCC) y negro (GND) se sueldan directamente a la perfboard.",
+                specs: {
+                    "Tensión de entrada": "5.0V DC (USB) / 3.3V LDO",
+                    "Conductores": "Bifilar 22 AWG (Rojo VCC / Negro GND)",
+                    "Alma de seguridad": "Cable de acero inoxidable 7×7 Ø 1.5 mm",
+                    "Funda exterior": "Manga textil trenzada ignífuga Ø 4.2 mm",
+                    "Anclaje al nido": "Fijado con prisionero a la mesa del festival"
+                }
+            },
+            perfboard: {
+                title: "Perfboard Prototipo 7×9 cm",
+                side: "CHASIS CENTRAL / DOBLE FAZ",
+                desc: "Placa base de fibra de vidrio FR4 con pads de cobre electrolítico y soldadura estañada. Soporta el circuito de visualización y comunicación inter-organismo.",
+                specs: {
+                    "Dimensiones": "70.0 × 90.0 × 1.6 mm",
+                    "Paso de orificios": "2.54 mm (Padrón estándar 100 mil)",
+                    "Orificios totales": "26 × 34 = 884 vías metalizadas",
+                    "Aislación": "FR4 Epóxico Grado V0 ignífugo"
+                }
+            },
+            display: {
+                title: "Pantalla TFT Color 2.4\" SPI",
+                side: "ANVERSO (Cara Frontal Visible)",
+                desc: "Panel gráfico de 240×320 píxeles asomado por la ventana del acrílico frontal. Muestra el motor gráfico de 1-bit / buffer circular inspirado en Quantum VJ.",
+                specs: {
+                    "Área visible": "2.4 Pulgadas (36.7 × 48.9 mm)",
+                    "Controlador": "ILI9341 / ST7789 SPI @ 40 MHz",
+                    "Frecuencia de refresco": "60 FPS en buffer circular DMA",
+                    "Calado en Acrílico": "Ventana sin reflejos para máxima pureza",
+                    "Fijación": "Pines soldados a la perfboard central"
+                }
+            },
+            mic: {
+                title: "Sensor de Micrófono I2S / Analógico",
+                side: "ANVERSO (Cara Frontal Inferior)",
+                desc: "Órgano sensorial acústico de alta sensibilidad asomado por el orificio del acrílico frontal para capturar las vibraciones sonoras de la sala y las voces del público.",
+                specs: {
+                    "Elemento": "Cápsula electret / MEMS con filtro acústico",
+                    "Rango de frecuencia": "20 Hz — 20.000 Hz",
+                    "Puerto en Acrílico": "Orificio pasante Ø 8.5 mm",
+                    "Sentido en colonia": "OÍDO (Audición / Clima sonoro)"
+                }
+            },
+            esp32: {
+                title: "Microcontrolador ESP32 Micro Core",
+                side: "REVERSO (Cara Posterior Oculta)",
+                desc: "Cerebro autónomo dual-core Xtensa a 240 MHz con Wi-Fi/Bluetooth. Ejecuta el firmware del motor gráfico en C++, el sampling de audio y el protocolo de radio ESP-NOW.",
+                specs: {
+                    "Procesador": "ESP32 Dual Core 32-bit @ 240 MHz",
+                    "Memoria": "520 KB SRAM + 4 MB Flash SPI",
+                    "Radio": "ESP-NOW (2.4 GHz) para contagio de nidos",
+                    "Protección": "Visible a través del acrílico trasero"
+                }
+            },
+            wiring: {
+                title: "Escultura de Circuito (Alambre Estañado)",
+                side: "DISTRIBUCIÓN BIDIRECCIONAL",
+                desc: "Pistas y puentes artesanales de cobre estañado de 0.8 mm y alambre esmaltado soldados punto a punto a través de las perforaciones de la placa.",
+                specs: {
+                    "Material": "Cobre electrolítico recubierto de estaño",
+                    "Topología": "Punto a punto sin pistas PCB impresas",
+                    "Alimentación": "Rieles perimetrales de VCC (3.3V) y GND"
+                }
+            },
+            magnets: {
+                title: "Acople Magnético y Sensor Hall",
+                side: "LATERALES DERECHO E IZQUIERDO",
+                desc: "Par de imanes de neodimio N52 con sensores de efecto Hall. Asoman por las ventanas laterales del marco 3D para acoplarse con otros organismos de la colonia.",
+                specs: {
+                    "Imanes": "Neodimio N52 Ø5×2 mm niquelado",
+                    "Detección": "Sensor Hall analógico 49E"
+                }
+            }
+        };
+
+        /* -------------------------------------------------------------
+           2. THREE.JS SCENE, CAMERA & LIGHTING SETUP
+           ------------------------------------------------------------- */
+        const container = document.getElementById('webgl-canvas');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x060911);
+
+        // Perspective Camera
+        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.set(125, 85, 175);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.15;
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.06;
+        controls.minDistance = 40;
+        controls.maxDistance = 500;
+        controls.target.set(0, 0, 0);
+
+        // Lighting Rig
+        const ambientLight = new THREE.AmbientLight(0xdbeafe, 0.85);
+        scene.add(ambientLight);
+
+        const keyLight = new THREE.DirectionalLight(0xffffff, 1.3);
+        keyLight.position.set(90, 140, 110);
+        keyLight.castShadow = true;
+        keyLight.shadow.mapSize.width = 2048;
+        keyLight.shadow.mapSize.height = 2048;
+        keyLight.shadow.camera.near = 10;
+        keyLight.shadow.camera.far = 450;
+        keyLight.shadow.bias = -0.0005;
+        scene.add(keyLight);
+
+        const fillLight = new THREE.DirectionalLight(0x38bdf8, 0.8);
+        fillLight.position.set(-100, -50, -90);
+        scene.add(fillLight);
+
+        const backFillLight = new THREE.DirectionalLight(0xffffff, 0.9);
+        backFillLight.position.set(0, 50, -140);
+        scene.add(backFillLight);
+
+        const rimLight = new THREE.DirectionalLight(0xf59e0b, 0.5);
+        rimLight.position.set(0, -110, 70);
+        scene.add(rimLight);
+
+        // Grid
+        const gridHelper = new THREE.GridHelper(300, 30, 0x1e293b, 0x0f172a);
+        gridHelper.position.y = -75;
+        scene.add(gridHelper);
+
+        /* -------------------------------------------------------------
+           3. PROCEDURAL TEXTURES & MATERIALS
+           ------------------------------------------------------------- */
+        
+        // 3.1 Perfboard Procedural Texture
+        function createPerfboardTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 1316;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#0f291e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = 'rgba(20, 60, 40, 0.35)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 4) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+            }
+            for (let j = 0; j < canvas.height; j += 4) {
+                ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(canvas.width, j); ctx.stroke();
+            }
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+            ctx.font = 'bold 22px monospace';
+            ctx.fillText('umwelt // PROTOTIPO SENSORIAL 70x90mm', 35, 45);
+            ctx.fillText('SENTIDO: OÍDO (MIC I2S + TFT 2.4")', 35, canvas.height - 30);
+
+            const cols = 26;
+            const rows = 34;
+            const stepX = (canvas.width - 80) / (cols - 1);
+            const stepY = (canvas.height - 110) / (rows - 1);
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const x = 40 + c * stepX;
+                    const y = 65 + r * stepY;
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, 9, 0, Math.PI * 2);
+                    ctx.fillStyle = '#b45309';
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, 7.5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#cbd5e1';
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = '#060a10';
+                    ctx.fill();
+                }
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.anisotropy = 8;
+            return texture;
+        }
+
+        // 3.2 Dynamic Animated Screen Canvas
+        const screenCanvas = document.createElement('canvas');
+        screenCanvas.width = 240;
+        screenCanvas.height = 320;
+        const screenCtx = screenCanvas.getContext('2d');
+        const screenTexture = new THREE.CanvasTexture(screenCanvas);
+
+        function updateScreenAnimation(time) {
+            const loopDuration = 4.0; // 4-second seamless rhythmic visual loop
+            const loopTime = time % loopDuration;
+            const progress = loopTime / loopDuration; // 0.0 to 1.0
+            const phase = progress * Math.PI * 2;
+
+            // 1. Deep OLED Background with Retro Scanline Grid
+            screenCtx.fillStyle = '#030712';
+            screenCtx.fillRect(0, 0, screenCanvas.width, screenCanvas.height);
+
+            screenCtx.fillStyle = 'rgba(255, 255, 255, 0.025)';
+            for (let y = 0; y < screenCanvas.height; y += 2) {
+                screenCtx.fillRect(0, y, screenCanvas.width, 1);
+            }
+
+            // 2. Top Header Telemetry
+            screenCtx.fillStyle = '#38bdf8';
+            screenCtx.font = 'bold 11px monospace';
+            screenCtx.fillText('UMWELT // ORGANISM 01', 12, 18);
+
+            screenCtx.fillStyle = '#64748b';
+            screenCtx.font = '9px monospace';
+            const frameCounter = String(Math.floor(progress * 128)).padStart(3, '0');
+            screenCtx.fillText(`LOOP: 4.0s [${frameCounter}/128] | 1-BIT`, 12, 32);
+
+            // Active Frame Border
+            screenCtx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+            screenCtx.lineWidth = 1;
+            screenCtx.strokeRect(8, 38, 224, 252);
+
+            // 3. Generative Layer 1: Glitch / Bio-Resonance Waveform
+            screenCtx.strokeStyle = 'rgba(16, 185, 129, 0.35)';
+            screenCtx.lineWidth = 1;
+            screenCtx.beginPath();
+            const waveY = 160;
+            for (let x = 12; x < 228; x += 3) {
+                const normX = (x - 12) / 216;
+                const wave = Math.sin(normX * Math.PI * 6 + phase) * Math.cos(normX * Math.PI * 2 - phase) * 28;
+                if (x === 12) screenCtx.moveTo(x, waveY + wave);
+                else screenCtx.lineTo(x, waveY + wave);
+            }
+            screenCtx.stroke();
+
+            // 4. Generative Layer 2: Central Harmonic Resonant Mandala (Bio-Organism Pulse)
+            const centerX = 120;
+            const centerY = 160;
+            const numNodes = 36;
+            const baseRadius = 38 + Math.sin(phase) * 12;
+
+            screenCtx.strokeStyle = '#38bdf8';
+            screenCtx.lineWidth = 1.6;
+            screenCtx.beginPath();
+            for (let i = 0; i <= numNodes; i++) {
+                const theta = (i / numNodes) * Math.PI * 2;
+                const harmonic = Math.sin(theta * 4 + phase * 2) * 14 + Math.cos(theta * 6 - phase) * 8;
+                const r = Math.max(12, baseRadius + harmonic);
+                const px = centerX + Math.cos(theta + phase * 0.5) * r;
+                const py = centerY + Math.sin(theta + phase * 0.5) * r;
+                if (i === 0) screenCtx.moveTo(px, py);
+                else screenCtx.lineTo(px, py);
+            }
+            screenCtx.closePath();
+            screenCtx.stroke();
+
+            // Inner Core Orbitals
+            screenCtx.strokeStyle = '#f59e0b';
+            screenCtx.lineWidth = 1.2;
+            screenCtx.beginPath();
+            for (let i = 0; i <= 6; i++) {
+                const a = (i / 6) * Math.PI * 2 + phase * 1.5;
+                const rInner = 14 + Math.sin(phase * 3 + i) * 6;
+                const cx = centerX + Math.cos(a) * rInner;
+                const cy = centerY + Math.sin(a) * rInner;
+                if (i === 0) screenCtx.moveTo(cx, cy);
+                else screenCtx.lineTo(cx, cy);
+            }
+            screenCtx.closePath();
+            screenCtx.stroke();
+
+            // 5. Generative Layer 3: 1-Bit Particle Spark Matrix
+            screenCtx.fillStyle = '#38bdf8';
+            for (let p = 0; p < 32; p++) {
+                const pAngle = (p / 32) * Math.PI * 2 + (p % 3) * 0.5;
+                const pDist = ((progress * 110 + p * 13) % 85) + 8;
+                const dotX = centerX + Math.cos(pAngle + phase * 0.2) * pDist;
+                const dotY = centerY + Math.sin(pAngle + phase * 0.2) * pDist;
+                if (dotX >= 12 && dotX <= 228 && dotY >= 42 && dotY <= 286) {
+                    screenCtx.fillRect(dotX, dotY, 2, 2);
+                }
+            }
+
+            // 6. Bottom Telemetry & Sync Indicators
+            screenCtx.fillStyle = '#10b981';
+            screenCtx.font = 'bold 9px monospace';
+            screenCtx.fillText('ESP-NOW: MESH ACTIVE [OK]', 14, 276);
+
+            // Progress Bar for the 4.0s loop
+            screenCtx.fillStyle = 'rgba(56, 189, 248, 0.2)';
+            screenCtx.fillRect(14, 282, 212, 3);
+            screenCtx.fillStyle = '#38bdf8';
+            screenCtx.fillRect(14, 282, 212 * progress, 3);
+
+            screenCtx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            screenCtx.font = '8px monospace';
+            screenCtx.fillText('UMWELT 1-BIT GENERATIVE ENGINE', 38, 305);
+
+            screenTexture.needsUpdate = true;
+        }
+
+        /* -------------------------------------------------------------
+           4. 3D OBJECT GROUPS & MODEL ASSEMBLY
+           ------------------------------------------------------------- */
+        const mainAssemblyGroup = new THREE.Group();
+        scene.add(mainAssemblyGroup);
+
+        // Exploded View Sandwich Groups
+        const frontScrewGroup = new THREE.Group();
+        const frontAcrylicGroup = new THREE.Group();
+        const frontElectronicsGroup = new THREE.Group();
+        const frame3DGroup = new THREE.Group();
+        const perfboardGroup = new THREE.Group();
+        const backElectronicsGroup = new THREE.Group();
+        const backAcrylicGroup = new THREE.Group();
+        const backScrewGroup = new THREE.Group();
+        const securityWireGroup = new THREE.Group();
+
+        mainAssemblyGroup.add(frontScrewGroup);
+        mainAssemblyGroup.add(frontAcrylicGroup);
+        mainAssemblyGroup.add(frontElectronicsGroup);
+        mainAssemblyGroup.add(frame3DGroup);
+        mainAssemblyGroup.add(perfboardGroup);
+        mainAssemblyGroup.add(backElectronicsGroup);
+        mainAssemblyGroup.add(backAcrylicGroup);
+        mainAssemblyGroup.add(backScrewGroup);
+        mainAssemblyGroup.add(securityWireGroup);
+
+        const pickableObjects = [];
+
+        // Realistic PBR Materials
+        const perfboardMat = new THREE.MeshStandardMaterial({
+            map: createPerfboardTexture(),
+            roughness: 0.45,
+            metalness: 0.15,
+            side: THREE.DoubleSide
+        });
+
+        const fr4CoreMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.6, metalness: 0.1 });
+        const copperPinMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.9, roughness: 0.2 });
+        const goldContactMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.95, roughness: 0.15 });
+        const silverSolderMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.25 });
+        const tinnedWireMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.95, roughness: 0.2 });
+        const blackPlasticMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.7, metalness: 0.1 });
+        const metallicCanMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.95, roughness: 0.25 });
+        const pcbRedMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.4, metalness: 0.2 });
+        const pcbPurpleMat = new THREE.MeshStandardMaterial({ color: 0x581c87, roughness: 0.4, metalness: 0.2 });
+
+        // 3D Printed Frame Material (Technical Space Gray PLA/PETG)
+        const frame3DMat = new THREE.MeshStandardMaterial({
+            color: 0x52525b, // Zinc / Technical Slate Gray
+            roughness: 0.7,
+            metalness: 0.15
+        });
+
+        // Ultra Clear Laser Cut PMMA Acrylic Glass Material with Specular Glass Sheen
+        const acrylicGlassMat = new THREE.MeshPhysicalMaterial({
+            color: 0xe0f2fe,        // Faint crystal glass tint
+            transparent: true,
+            opacity: 0.22,          // Crisp transparent glass sheen
+            roughness: 0.03,        // Super glossy polished surface
+            metalness: 0.08,
+            transmission: 0.95,     // 95% light transmission to see all internal electronics
+            ior: 1.491,             // Real PMMA Acrylic index of refraction
+            reflectivity: 0.85,     // Strong specular glints
+            clearcoat: 1.0,         // High-gloss protective layer
+            clearcoatRoughness: 0.02,
+            depthWrite: false,      // Ensures internal circuits are 100% sharp and visible
+            side: THREE.DoubleSide
+        });
+
+        // Laser-Cut Polished Internal Cut Edge Material (Catchy glass edge refraction)
+        const acrylicCutEdgeMat = new THREE.MeshStandardMaterial({
+            color: 0x7dd3fc,        // Luminous sky blue edge
+            transparent: true,
+            opacity: 0.45,
+            roughness: 0.12,
+            metalness: 0.25,
+            depthWrite: false,
+            side: THREE.DoubleSide
+        });
+
+        const securityScrewMat = new THREE.MeshStandardMaterial({
+            color: 0xf1f5f9,
+            metalness: 0.96,
+            roughness: 0.18
+        });
+
+        const steelWireMat = new THREE.MeshStandardMaterial({
+            color: 0x94a3b8,
+            metalness: 0.9,
+            roughness: 0.3
+        });
+
+        /* --- 4.1 BUILD PERFBOARD 70x90x1.6 mm --- */
+        function buildPerfboard() {
+            const W = SSOT.perfboard.width;
+            const H = SSOT.perfboard.height;
+            const T = SSOT.perfboard.thickness;
+
+            const boardGeom = new THREE.BoxGeometry(W, H, T);
+            const materials = [fr4CoreMat, fr4CoreMat, fr4CoreMat, fr4CoreMat, perfboardMat, perfboardMat];
+            const boardMesh = new THREE.Mesh(boardGeom, materials);
+            boardMesh.castShadow = true;
+            boardMesh.receiveShadow = true;
+            boardMesh.userData = { id: 'perfboard' };
+            pickableObjects.push(boardMesh);
+            perfboardGroup.add(boardMesh);
+
+            // Neodymium Coupling Magnets
+            const magnetGeom = new THREE.CylinderGeometry(2.5, 2.5, 2.0, 16);
+            const magnetL = new THREE.Mesh(magnetGeom, metallicCanMat);
+            magnetL.rotation.z = Math.PI / 2;
+            magnetL.position.set(-W/2, 0, 0);
+            magnetL.userData = { id: 'magnets' };
+            pickableObjects.push(magnetL);
+            perfboardGroup.add(magnetL);
+
+            const magnetR = new THREE.Mesh(magnetGeom, metallicCanMat);
+            magnetR.rotation.z = Math.PI / 2;
+            magnetR.position.set(W/2, 0, 0);
+            magnetR.userData = { id: 'magnets' };
+            pickableObjects.push(magnetR);
+            perfboardGroup.add(magnetR);
+        }
+
+        /* --- 4.2 BUILD 3D PRINTED MIDDLE GRAY PERIMETER BUMPER / FRAME (100% HOLLOW CENTER) --- */
+        function build3DPrintedFrame() {
+            const outW = SSOT.case.outerWidth;    // 75.2 mm
+            const outH = SSOT.case.outerHeight;   // 95.2 mm
+            const wall = SSOT.case.wallThick;     // 2.5 mm
+            const depth = SSOT.case.frameDepth;   // 14.8 mm
+            const sX = SSOT.case.screwDistanceX;  // 33.8 mm
+            const sY = SSOT.case.screwDistanceY;  // 43.8 mm
+
+            // 1. Top Wall (Sleek thin 2.5mm horizontal beam)
+            const topGeom = new THREE.BoxGeometry(outW - 2 * wall, wall, depth);
+            const topWall = new THREE.Mesh(topGeom, frame3DMat);
+            topWall.position.set(0, outH/2 - wall/2, 0);
+            topWall.castShadow = true;
+            topWall.userData = { id: 'case_frame' };
+            pickableObjects.push(topWall);
+            frame3DGroup.add(topWall);
+
+            // 2. Bottom Wall (with centered USB cable slot)
+            const botLeftGeom = new THREE.BoxGeometry((outW - 2 * wall - 14) / 2, wall, depth);
+            const botLeft = new THREE.Mesh(botLeftGeom, frame3DMat);
+            botLeft.position.set(-(outW - 2 * wall - 14)/4 - 7, -outH/2 + wall/2, 0);
+            botLeft.castShadow = true;
+            botLeft.userData = { id: 'case_frame' };
+            pickableObjects.push(botLeft);
+            frame3DGroup.add(botLeft);
+
+            const botRight = new THREE.Mesh(botLeftGeom, frame3DMat);
+            botRight.position.set((outW - 2 * wall - 14)/4 + 7, -outH/2 + wall/2, 0);
+            botRight.castShadow = true;
+            botRight.userData = { id: 'case_frame' };
+            pickableObjects.push(botRight);
+            frame3DGroup.add(botRight);
+
+            // 3. Left Wall (with lateral magnet cutout window)
+            const sideGeom = new THREE.BoxGeometry(wall, (outH - 2 * wall - 10)/2, depth);
+            const leftTop = new THREE.Mesh(sideGeom, frame3DMat);
+            leftTop.position.set(-outW/2 + wall/2, (outH - 2 * wall - 10)/4 + 5, 0);
+            leftTop.castShadow = true;
+            leftTop.userData = { id: 'case_frame' };
+            pickableObjects.push(leftTop);
+            frame3DGroup.add(leftTop);
+
+            const leftBot = new THREE.Mesh(sideGeom, frame3DMat);
+            leftBot.position.set(-outW/2 + wall/2, -(outH - 2 * wall - 10)/4 - 5, 0);
+            leftBot.castShadow = true;
+            leftBot.userData = { id: 'case_frame' };
+            pickableObjects.push(leftBot);
+            frame3DGroup.add(leftBot);
+
+            // 4. Right Wall (with lateral magnet cutout window)
+            const rightTop = new THREE.Mesh(sideGeom, frame3DMat);
+            rightTop.position.set(outW/2 - wall/2, (outH - 2 * wall - 10)/4 + 5, 0);
+            rightTop.castShadow = true;
+            rightTop.userData = { id: 'case_frame' };
+            pickableObjects.push(rightTop);
+            frame3DGroup.add(rightTop);
+
+            const rightBot = new THREE.Mesh(sideGeom, frame3DMat);
+            rightBot.position.set(outW/2 - wall/2, -(outH - 2 * wall - 10)/4 - 5, 0);
+            rightBot.castShadow = true;
+            rightBot.userData = { id: 'case_frame' };
+            pickableObjects.push(rightBot);
+            frame3DGroup.add(rightBot);
+
+            // 5. Four Rounded Corner Columns - PROPERLY ROTATED ALONG Z-AXIS
+            const cornerGeom = new THREE.CylinderGeometry(3.2, 3.2, depth, 20);
+            const corners = [[-sX, sY], [sX, sY], [-sX, -sY], [sX, -sY]];
+            corners.forEach(([cx, cy]) => {
+                const cornerCol = new THREE.Mesh(cornerGeom, frame3DMat);
+                cornerCol.rotation.x = Math.PI / 2; // ALIGNED ALONG Z-AXIS FOR SCREW PASSAGE
+                cornerCol.position.set(cx, cy, 0);
+                cornerCol.castShadow = true;
+                cornerCol.userData = { id: 'case_frame' };
+                pickableObjects.push(cornerCol);
+                frame3DGroup.add(cornerCol);
+            });
+
+            // 6. Security Wire Anchor Ring on Bottom-Left Corner - PROPERLY ROTATED ALONG Z-AXIS
+            const lugGeom = new THREE.CylinderGeometry(4.0, 4.0, depth, 20);
+            const lug = new THREE.Mesh(lugGeom, frame3DMat);
+            lug.rotation.x = Math.PI / 2; // ALIGNED ALONG Z-AXIS
+            lug.position.set(SSOT.case.wireLugX - 2.5, SSOT.case.wireLugY, 0);
+            lug.userData = { id: 'case_frame' };
+            pickableObjects.push(lug);
+            frame3DGroup.add(lug);
+        }
+
+        /* --- 4.3 BUILD CRYSTAL CLEAR ACRYLIC COVERS WITH LASER CUTOUT HIGHLIGHTS --- */
+        function buildLaserCutAcrylicCovers() {
+            const outW = SSOT.case.outerWidth;    // 75.2 mm
+            const outH = SSOT.case.outerHeight;   // 95.2 mm
+            const thick = SSOT.case.acrylicThick; // 3.0 mm
+            const sX = SSOT.case.screwDistanceX;  // 33.8 mm
+            const sY = SSOT.case.screwDistanceY;  // 43.8 mm
+            const w2 = outW / 2;
+            const h2 = outH / 2;
+
+            // 1. FRONT ACRYLIC with Cutouts for Screen, Mic and 4 Corner Screws
+            const frontShape = new THREE.Shape();
+            frontShape.moveTo(-w2, -h2);
+            frontShape.lineTo(w2, -h2);
+            frontShape.lineTo(w2, h2);
+            frontShape.lineTo(-w2, h2);
+            frontShape.closePath();
+
+            // Hole 1: Screen Cutout Window (CW Path)
+            const scW2 = SSOT.display24.cutoutWidth / 2;
+            const scH2 = SSOT.display24.cutoutHeight / 2;
+            const scY = SSOT.display24.posY;
+            const scrCut = new THREE.Path();
+            scrCut.moveTo(-scW2, scY + scH2);
+            scrCut.lineTo(scW2, scY + scH2);
+            scrCut.lineTo(scW2, scY - scH2);
+            scrCut.lineTo(-scW2, scY - scH2);
+            scrCut.closePath();
+            frontShape.holes.push(scrCut);
+
+            // Hole 2: Microphone Acoustic Port (CW Path) - EXACTLY CONCENTRIC WITH CAPSULE AT Y = -29.0
+            const micCut = new THREE.Path();
+            const mR = SSOT.micSensor.cutoutDiameter / 2;
+            const mY = SSOT.micSensor.posY;
+            const mX = SSOT.micSensor.posX;
+            for (let i = 0; i <= 24; i++) {
+                const theta = - (i / 24) * Math.PI * 2;
+                const x = mX + Math.cos(theta) * mR;
+                const y = mY + Math.sin(theta) * mR;
+                if (i === 0) micCut.moveTo(x, y);
+                else micCut.lineTo(x, y);
+            }
+            micCut.closePath();
+            frontShape.holes.push(micCut);
+
+            // Holes 3-6: 4 Corner Screw Holes (CW Paths)
+            const screwRad = SSOT.case.screwRadius;
+            [[-sX, sY], [sX, sY], [-sX, -sY], [sX, -sY]].forEach(([cx, cy]) => {
+                const sp = new THREE.Path();
+                for (let i = 0; i <= 16; i++) {
+                    const theta = - (i / 16) * Math.PI * 2;
+                    const x = cx + Math.cos(theta) * screwRad;
+                    const y = cy + Math.sin(theta) * screwRad;
+                    if (i === 0) sp.moveTo(x, y);
+                    else sp.lineTo(x, y);
+                }
+                sp.closePath();
+                frontShape.holes.push(sp);
+            });
+
+            const frontGeom = new THREE.ExtrudeGeometry(frontShape, {
+                depth: thick,
+                bevelEnabled: true,
+                bevelSize: 0.35,
+                bevelThickness: 0.35,
+                bevelSegments: 2
+            });
+            frontGeom.center();
+            const frontAcrylicMesh = new THREE.Mesh(frontGeom, acrylicGlassMat);
+            frontAcrylicMesh.position.z = SSOT.case.frameDepth / 2 + thick / 2;
+            frontAcrylicMesh.userData = { id: 'case_front' };
+            pickableObjects.push(frontAcrylicMesh);
+            frontAcrylicGroup.add(frontAcrylicMesh);
+
+            // Add Laser-Cut Edges Highlights (Cyan glass sheen lines)
+            const frontEdges = new THREE.EdgesGeometry(frontGeom, 25);
+            const edgeLineMat = new THREE.LineBasicMaterial({ color: 0x7dd3fc, transparent: true, opacity: 0.55 });
+            const frontEdgeLines = new THREE.LineSegments(frontEdges, edgeLineMat);
+            frontEdgeLines.position.copy(frontAcrylicMesh.position);
+            frontAcrylicGroup.add(frontEdgeLines);
+
+            // Physical 3mm Laser Cut Depth Ring around Screen Window
+            const scrWallTop = new THREE.Mesh(new THREE.BoxGeometry(scW2 * 2 + 0.6, 0.6, thick), acrylicCutEdgeMat);
+            scrWallTop.position.set(0, scY + scH2, SSOT.case.frameDepth / 2 + thick / 2);
+            frontAcrylicGroup.add(scrWallTop);
+
+            const scrWallBot = new THREE.Mesh(new THREE.BoxGeometry(scW2 * 2 + 0.6, 0.6, thick), acrylicCutEdgeMat);
+            scrWallBot.position.set(0, scY - scH2, SSOT.case.frameDepth / 2 + thick / 2);
+            frontAcrylicGroup.add(scrWallBot);
+
+            const scrWallLeft = new THREE.Mesh(new THREE.BoxGeometry(0.6, scH2 * 2 + 0.6, thick), acrylicCutEdgeMat);
+            scrWallLeft.position.set(-scW2, scY, SSOT.case.frameDepth / 2 + thick / 2);
+            frontAcrylicGroup.add(scrWallLeft);
+
+            const scrWallRight = new THREE.Mesh(new THREE.BoxGeometry(0.6, scH2 * 2 + 0.6, thick), acrylicCutEdgeMat);
+            scrWallRight.position.set(scW2, scY, SSOT.case.frameDepth / 2 + thick / 2);
+            frontAcrylicGroup.add(scrWallRight);
+
+            // Physical 3mm Laser Cut Depth Cylinder around Mic Hole (Concentric at mX, mY)
+            const micRingGeom = new THREE.CylinderGeometry(mR + 0.15, mR + 0.15, thick, 24, 1, true);
+            const micRing = new THREE.Mesh(micRingGeom, acrylicCutEdgeMat);
+            micRing.rotation.x = Math.PI / 2;
+            micRing.position.set(mX, mY, SSOT.case.frameDepth / 2 + thick / 2);
+            frontAcrylicGroup.add(micRing);
+
+            // 2. BACK ACRYLIC (Solid crystal clear sheet with Corner Screw Holes)
+            const backShape = new THREE.Shape();
+            backShape.moveTo(-w2, -h2);
+            backShape.lineTo(w2, -h2);
+            backShape.lineTo(w2, h2);
+            backShape.lineTo(-w2, h2);
+            backShape.closePath();
+
+            // Screw holes on back plate
+            [[-sX, sY], [sX, sY], [-sX, -sY], [sX, -sY]].forEach(([cx, cy]) => {
+                const sp = new THREE.Path();
+                for (let i = 0; i <= 16; i++) {
+                    const theta = - (i / 16) * Math.PI * 2;
+                    const x = cx + Math.cos(theta) * screwRad;
+                    const y = cy + Math.sin(theta) * screwRad;
+                    if (i === 0) sp.moveTo(x, y);
+                    else sp.lineTo(x, y);
+                }
+                sp.closePath();
+                backShape.holes.push(sp);
+            });
+
+            const backGeom = new THREE.ExtrudeGeometry(backShape, {
+                depth: thick,
+                bevelEnabled: true,
+                bevelSize: 0.35,
+                bevelThickness: 0.35,
+                bevelSegments: 2
+            });
+            backGeom.center();
+            const backAcrylicMesh = new THREE.Mesh(backGeom, acrylicGlassMat);
+            backAcrylicMesh.position.z = -SSOT.case.frameDepth / 2 - thick / 2;
+            backAcrylicMesh.userData = { id: 'case_back' };
+            pickableObjects.push(backAcrylicMesh);
+            backAcrylicGroup.add(backAcrylicMesh);
+
+            const backEdges = new THREE.EdgesGeometry(backGeom, 25);
+            const backEdgeLines = new THREE.LineSegments(backEdges, edgeLineMat);
+            backEdgeLines.position.copy(backAcrylicMesh.position);
+            backAcrylicGroup.add(backEdgeLines);
+        }
+
+        // Helper Functions for Soldering and Circuit Sculpture Wiring
+        function createSolderJoint(x, y, z) {
+            const geom = new THREE.SphereGeometry(0.9, 12, 12);
+            geom.scale(1, 1, 0.65);
+            const mesh = new THREE.Mesh(geom, silverSolderMat);
+            mesh.position.set(x, y, z);
+            return mesh;
+        }
+
+        function createSmoothWire(points, material, radius = 0.4) {
+            const curve = new THREE.CatmullRomCurve3(points);
+            const geom = new THREE.TubeGeometry(curve, 32, radius, 8, false);
+            const mesh = new THREE.Mesh(geom, material);
+            mesh.castShadow = true;
+            mesh.userData = { id: 'wiring' };
+            pickableObjects.push(mesh);
+            return mesh;
+        }
+
+        // Dedicated Materials for Bifilar Power Wiring & M3 Fastener Details
+        const wireRedVccMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.45, metalness: 0.1 });
+        const wireBlackGndMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5, metalness: 0.1 });
+        const textileSleeveMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.85, metalness: 0.1 });
+        const brassGlandMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.9, roughness: 0.25 });
+        const nylonWasherMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.7, roughness: 0.3 });
+        const brassInsertMat = new THREE.MeshStandardMaterial({ color: 0xb45309, metalness: 0.9, roughness: 0.35 });
+
+        /* --- 4.4 BUILD DETAILED M3 SECURITY FASTENING SYSTEM --- */
+        function buildSecurityScrews() {
+            const sX = SSOT.case.screwDistanceX;
+            const sY = SSOT.case.screwDistanceY;
+            const totalZ = SSOT.case.totalDepth;
+            const frameDepth = SSOT.case.frameDepth;
+            const acrylicThick = SSOT.case.acrylicThick;
+
+            // Geometry Components for M3 Fastener Stack
+            const headGeom = new THREE.CylinderGeometry(2.9, 2.9, 1.6, 20); // Pan head
+            const washerGeom = new THREE.CylinderGeometry(3.5, 3.5, 0.6, 20); // Protective Nylon washer
+            const shaftGeom = new THREE.CylinderGeometry(1.45, 1.45, totalZ + 2.0, 16); // M3 Threaded shaft
+            const pinGeom = new THREE.CylinderGeometry(0.45, 0.45, 0.8, 8); // Anti-tamper pin inside Torx
+            const insertGeom = new THREE.CylinderGeometry(2.3, 2.3, 6.0, 16); // Brass Knurled Heat-Set Insert in 3D frame
+            const capNutGeom = new THREE.CylinderGeometry(2.9, 2.9, 2.2, 6); // Rear Hex Domed Cap Nut / Nyloc
+            const capDomeGeom = new THREE.SphereGeometry(2.9, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+
+            const cornerPositions = [[-sX, sY], [sX, sY], [-sX, -sY], [sX, -sY]];
+
+            cornerPositions.forEach(([cx, cy]) => {
+                const zFrontAcrylic = frameDepth / 2 + acrylicThick;
+                const zBackAcrylic = -frameDepth / 2 - acrylicThick;
+
+                // 1. Front Stainless Steel Pan Head (Torx Security)
+                const fHead = new THREE.Mesh(headGeom, securityScrewMat);
+                fHead.rotation.x = Math.PI / 2;
+                fHead.position.set(cx, cy, zFrontAcrylic + 0.8 + 0.6);
+                fHead.userData = { id: 'security_screws' };
+                pickableObjects.push(fHead);
+                frontScrewGroup.add(fHead);
+
+                // Anti-tamper center pin
+                const fPin = new THREE.Mesh(pinGeom, blackPlasticMat);
+                fPin.rotation.x = Math.PI / 2;
+                fPin.position.set(cx, cy, zFrontAcrylic + 1.4 + 0.6);
+                frontScrewGroup.add(fPin);
+
+                // 2. Front Transparent Nylon Damper Washer (Prevents acrylic cracking under torque)
+                const fWasher = new THREE.Mesh(washerGeom, nylonWasherMat);
+                fWasher.rotation.x = Math.PI / 2;
+                fWasher.position.set(cx, cy, zFrontAcrylic + 0.3);
+                fWasher.userData = { id: 'security_screws' };
+                pickableObjects.push(fWasher);
+                frontScrewGroup.add(fWasher);
+
+                // 3. Continuous M3 Threaded Steel Shaft
+                const shaft = new THREE.Mesh(shaftGeom, securityScrewMat);
+                shaft.rotation.x = Math.PI / 2;
+                shaft.position.set(cx, cy, 0);
+                frontScrewGroup.add(shaft);
+
+                // 4. Brass Threaded Insert (Embedded inside 3D frame boss)
+                const insertF = new THREE.Mesh(insertGeom, brassInsertMat);
+                insertF.rotation.x = Math.PI / 2;
+                insertF.position.set(cx, cy, frameDepth / 4);
+                insertF.userData = { id: 'security_screws' };
+                frame3DGroup.add(insertF);
+
+                // 5. Rear Nylon Damper Washer
+                const bWasher = new THREE.Mesh(washerGeom, nylonWasherMat);
+                bWasher.rotation.x = Math.PI / 2;
+                bWasher.position.set(cx, cy, zBackAcrylic - 0.3);
+                bWasher.userData = { id: 'security_screws' };
+                pickableObjects.push(bWasher);
+                backScrewGroup.add(bWasher);
+
+                // 6. Rear Stainless Steel Domed Cap Nut (Tuerca Ciega Inviolable)
+                const bNut = new THREE.Mesh(capNutGeom, securityScrewMat);
+                bNut.rotation.x = Math.PI / 2;
+                bNut.position.set(cx, cy, zBackAcrylic - 1.4);
+                bNut.userData = { id: 'security_screws' };
+                pickableObjects.push(bNut);
+                backScrewGroup.add(bNut);
+
+                const bDome = new THREE.Mesh(capDomeGeom, securityScrewMat);
+                bDome.rotation.x = -Math.PI / 2;
+                bDome.position.set(cx, cy, zBackAcrylic - 2.5);
+                backScrewGroup.add(bDome);
+            });
+        }
+
+        /* --- 4.5 BUILD COMBINED BIFILAR POWER CABLE (5V/3.3V) & STEEL SECURITY TETHER --- */
+        function buildPowerAndSecurityHarness() {
+            const wx = SSOT.case.wireLugX - 2.5; // Entrance anchor coordinate
+            const wy = SSOT.case.wireLugY;
+
+            // 1. External Braided Cable Harness (Textile Sheath bundle coming from table)
+            const harnessPoints = [
+                new THREE.Vector3(wx, wy - 10, 0),
+                new THREE.Vector3(wx - 2, wy - 18, 0),
+                new THREE.Vector3(wx - 8, wy - 35, 8),
+                new THREE.Vector3(wx - 14, wy - 55, 16),
+                new THREE.Vector3(wx - 18, -75, 22)
+            ];
+            const harnessCurve = new THREE.CatmullRomCurve3(harnessPoints);
+            const harnessGeom = new THREE.TubeGeometry(harnessCurve, 48, 1.8, 12, false);
+            const harnessMesh = new THREE.Mesh(harnessGeom, textileSleeveMat);
+            harnessMesh.castShadow = true;
+            harnessMesh.userData = { id: 'power_cable' };
+            pickableObjects.push(harnessMesh);
+            securityWireGroup.add(harnessMesh);
+
+            // 2. Brass Strain Relief Collar / Prensacables at the 3D frame entrance
+            const glandGeom = new THREE.CylinderGeometry(2.8, 2.8, 4.0, 16);
+            const gland = new THREE.Mesh(glandGeom, brassGlandMat);
+            gland.position.set(wx, wy - 10, 0);
+            gland.rotation.z = -Math.PI / 10;
+            gland.userData = { id: 'power_cable' };
+            pickableObjects.push(gland);
+            securityWireGroup.add(gland);
+
+            // 3. Braided Stainless Steel Security Core Loop (Anchors structurally inside the frame)
+            const steelLoopPoints = [
+                new THREE.Vector3(wx, wy - 8, 0),
+                new THREE.Vector3(wx - 4, wy - 2, 2.5),
+                new THREE.Vector3(wx, wy + 4, 0),
+                new THREE.Vector3(wx + 4, wy - 2, -2.5),
+                new THREE.Vector3(wx, wy - 8, 0)
+            ];
+            const steelLoopCurve = new THREE.CatmullRomCurve3(steelLoopPoints);
+            const steelLoopGeom = new THREE.TubeGeometry(steelLoopCurve, 32, 0.75, 8, false);
+            const steelLoopMesh = new THREE.Mesh(steelLoopGeom, steelWireMat);
+            steelLoopMesh.userData = { id: 'power_cable' };
+            pickableObjects.push(steelLoopMesh);
+            securityWireGroup.add(steelLoopMesh);
+
+            // Aluminum Crimp Sleeve / Ferrule on the steel cable
+            const crimpGeom = new THREE.CylinderGeometry(2.0, 2.0, 4.5, 16);
+            const crimp = new THREE.Mesh(crimpGeom, securityScrewMat);
+            crimp.rotation.z = Math.PI / 6;
+            crimp.position.set(wx - 1.5, wy - 6, 0);
+            crimp.userData = { id: 'power_cable' };
+            pickableObjects.push(crimp);
+            securityWireGroup.add(crimp);
+
+            // 4. Internal Bifilar Power Conductors (Red +5V/3.3V and Black GND)
+            // RED WIRE (VCC +5V / +3.3V) -> Routes into Perfboard VCC bus rail
+            const redWirePoints = [
+                new THREE.Vector3(wx, wy - 8, 0),
+                new THREE.Vector3(wx + 2, wy + 2, 0.8),
+                new THREE.Vector3(-25, -38, 1.0)
+            ];
+            const redCurve = new THREE.CatmullRomCurve3(redWirePoints);
+            const redWireGeom = new THREE.TubeGeometry(redCurve, 20, 0.42, 8, false);
+            const redWireMesh = new THREE.Mesh(redWireGeom, wireRedVccMat);
+            redWireMesh.userData = { id: 'power_cable' };
+            pickableObjects.push(redWireMesh);
+            frontElectronicsGroup.add(redWireMesh);
+
+            // BLACK WIRE (GND / 0V) -> Routes into Perfboard GND bus rail
+            const blackWirePoints = [
+                new THREE.Vector3(wx, wy - 8, 0),
+                new THREE.Vector3(wx - 1, wy + 2, 0.8),
+                new THREE.Vector3(-28, -38, 1.0)
+            ];
+            const blackCurve = new THREE.CatmullRomCurve3(blackWirePoints);
+            const blackWireGeom = new THREE.TubeGeometry(blackCurve, 20, 0.42, 8, false);
+            const blackWireMesh = new THREE.Mesh(blackWireGeom, wireBlackGndMat);
+            blackWireMesh.userData = { id: 'power_cable' };
+            pickableObjects.push(blackWireMesh);
+            frontElectronicsGroup.add(blackWireMesh);
+
+            // Silver Solder Joints where power connects into the perfboard
+            frontElectronicsGroup.add(createSolderJoint(-25, -38, 1.0));
+            frontElectronicsGroup.add(createSolderJoint(-28, -38, 1.0));
+        }
+
+        /* --- 4.6 BUILD FRONT COMPONENTS (TFT 2.4" & MIC SENSOR) --- */
+        function buildFrontComponents() {
+            const T_board = SSOT.perfboard.thickness;
+
+            // 1. 2.4" TFT LCD Display Assembly
+            const tftGroup = new THREE.Group();
+            tftGroup.position.set(SSOT.display24.posX, SSOT.display24.posY, T_board/2 + 2.5);
+
+            const tftPcbGeom = new THREE.BoxGeometry(SSOT.display24.pcbWidth, SSOT.display24.pcbHeight, 1.4);
+            const tftPcb = new THREE.Mesh(tftPcbGeom, pcbRedMat);
+            tftPcb.castShadow = true;
+            tftPcb.receiveShadow = true;
+            tftPcb.userData = { id: 'display' };
+            pickableObjects.push(tftPcb);
+            tftGroup.add(tftPcb);
+
+            const screenGeom = new THREE.PlaneGeometry(SSOT.display24.activeWidth, SSOT.display24.activeHeight);
+            const screenMat = new THREE.MeshBasicMaterial({ map: screenTexture, side: THREE.FrontSide });
+            const screenMesh = new THREE.Mesh(screenGeom, screenMat);
+            screenMesh.position.set(0, 0, 0.75);
+            screenMesh.userData = { id: 'display' };
+            pickableObjects.push(screenMesh);
+            tftGroup.add(screenMesh);
+
+            const bezelGeom = new THREE.BoxGeometry(SSOT.display24.activeWidth + 2.4, SSOT.display24.activeHeight + 2.4, 0.8);
+            const bezelMat = new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.8, roughness: 0.3 });
+            const bezelMesh = new THREE.Mesh(bezelGeom, bezelMat);
+            bezelMesh.position.set(0, 0, 0.5);
+            tftGroup.add(bezelMesh);
+
+            const pinStripGeom = new THREE.BoxGeometry(SSOT.display24.pcbWidth - 6, 2.5, 2.5);
+            const pinStrip = new THREE.Mesh(pinStripGeom, blackPlasticMat);
+            pinStrip.position.set(0, -SSOT.display24.pcbHeight/2 + 2, -1.5);
+            tftGroup.add(pinStrip);
+
+            frontElectronicsGroup.add(tftGroup);
+
+            // 2. Microphone Sensor Module - PRECISELY ALIGNED
+            const micGroup = new THREE.Group();
+            micGroup.position.set(SSOT.micSensor.posX, SSOT.micSensor.posY, T_board/2 + 2.0);
+
+            const micPcbGeom = new THREE.BoxGeometry(SSOT.micSensor.pcbWidth, SSOT.micSensor.pcbHeight, 1.2);
+            const micPcb = new THREE.Mesh(micPcbGeom, pcbPurpleMat);
+            micPcb.castShadow = true;
+            micPcb.userData = { id: 'mic' };
+            pickableObjects.push(micPcb);
+            micGroup.add(micPcb);
+
+            // Cylindrical Capsule Centered at (0, 0) relative to micGroup (World Y = -29.0 mm)
+            const capGeom = new THREE.CylinderGeometry(SSOT.micSensor.capsuleDiameter/2, SSOT.micSensor.capsuleDiameter/2, SSOT.micSensor.capsuleHeight, 24);
+            const capMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.9, roughness: 0.2 });
+            const capsule = new THREE.Mesh(capGeom, capMat);
+            capsule.rotation.x = Math.PI / 2;
+            capsule.position.set(0, 0, SSOT.micSensor.capsuleHeight/2 + 0.6);
+            capsule.castShadow = true;
+            capsule.userData = { id: 'mic' };
+            pickableObjects.push(capsule);
+            micGroup.add(capsule);
+
+            // Acoustic Felt Hole Centered at (0, 0) relative to micGroup
+            const feltGeom = new THREE.CylinderGeometry(1.2, 1.2, 0.1, 16);
+            const feltMat = new THREE.MeshBasicMaterial({ color: 0x111827 });
+            const felt = new THREE.Mesh(feltGeom, feltMat);
+            felt.rotation.x = Math.PI / 2;
+            felt.position.set(0, 0, SSOT.micSensor.capsuleHeight + 0.65);
+            micGroup.add(felt);
+
+            frontElectronicsGroup.add(micGroup);
+
+            // 3. Sculpted Front Wires
+            buildFrontSculptureWires();
+        }
+
+        /* --- 4.7 BUILD BACK COMPONENTS (ESP32 MICRO DEV BOARD) --- */
+        function buildBackComponents() {
+            const T_board = SSOT.perfboard.thickness;
+
+            const espGroup = new THREE.Group();
+            espGroup.position.set(SSOT.esp32Micro.posX, SSOT.esp32Micro.posY, -T_board/2 - 2.8);
+
+            const espPcbGeom = new THREE.BoxGeometry(SSOT.esp32Micro.pcbWidth, SSOT.esp32Micro.pcbHeight, 1.6);
+            const espPcb = new THREE.Mesh(espPcbGeom, blackPlasticMat);
+            espPcb.castShadow = true;
+            espPcb.receiveShadow = true;
+            espPcb.userData = { id: 'esp32' };
+            pickableObjects.push(espPcb);
+            espGroup.add(espPcb);
+
+            const shieldGeom = new THREE.BoxGeometry(SSOT.esp32Micro.shieldWidth, SSOT.esp32Micro.shieldHeight, 2.2);
+            const shieldMesh = new THREE.Mesh(shieldGeom, metallicCanMat);
+            shieldMesh.position.set(0, -4.0, -1.6);
+            shieldMesh.castShadow = true;
+            shieldMesh.userData = { id: 'esp32' };
+            pickableObjects.push(shieldMesh);
+            espGroup.add(shieldMesh);
+
+            const usbGeom = new THREE.BoxGeometry(8.5, 6.5, 3.2);
+            const usbMesh = new THREE.Mesh(usbGeom, metallicCanMat);
+            usbMesh.position.set(0, -SSOT.esp32Micro.pcbHeight/2 + 2, -1.8);
+            espGroup.add(usbMesh);
+
+            backElectronicsGroup.add(espGroup);
+            buildBackSculptureWires();
+        }
+
+        /* --- 4.8 CIRCUIT SCULPTURE WIRES --- */
+        function buildFrontSculptureWires() {
+            const zFront = 1.0;
+            frontElectronicsGroup.add(createSmoothWire([
+                new THREE.Vector3(-28, -38, zFront),
+                new THREE.Vector3(-28, 10, zFront),
+                new THREE.Vector3(-28, 38, zFront)
+            ], tinnedWireMat, 0.55));
+
+            frontElectronicsGroup.add(createSmoothWire([
+                new THREE.Vector3(28, -38, zFront),
+                new THREE.Vector3(28, 10, zFront),
+                new THREE.Vector3(28, 38, zFront)
+            ], copperPinMat, 0.55));
+
+            frontElectronicsGroup.add(createSmoothWire([
+                new THREE.Vector3(-5, -22, zFront),
+                new THREE.Vector3(-14, -22, zFront + 0.6),
+                new THREE.Vector3(-28, -22, zFront)
+            ], tinnedWireMat, 0.35));
+
+            frontElectronicsGroup.add(createSmoothWire([
+                new THREE.Vector3(5, -22, zFront),
+                new THREE.Vector3(14, -22, zFront + 0.6),
+                new THREE.Vector3(28, -22, zFront)
+            ], copperPinMat, 0.35));
+        }
+
+        function buildBackSculptureWires() {
+            const zBack = -1.0;
+            backElectronicsGroup.add(createSmoothWire([
+                new THREE.Vector3(-11.5, 12, zBack),
+                new THREE.Vector3(-22, 18, zBack - 0.8),
+                new THREE.Vector3(-22, 34, zBack)
+            ], tinnedWireMat, 0.38));
+
+            backElectronicsGroup.add(createSmoothWire([
+                new THREE.Vector3(11.5, -8, zBack),
+                new THREE.Vector3(18, -16, zBack - 0.8),
+                new THREE.Vector3(18, -32, zBack)
+            ], tinnedWireMat, 0.38));
+        }
+
+        /* --- 4.9 BUILD CAD DIMENSION COTAS --- */
+        const cotasGroup = new THREE.Group();
+        cotasGroup.visible = false;
+        scene.add(cotasGroup);
+
+        function createDimensionLine(p1, p2, labelText, offsetVec) {
+            const group = new THREE.Group();
+            const matLine = new THREE.LineBasicMaterial({ color: 0x38bdf8, linewidth: 2 });
+
+            const points = [p1, p2];
+            const geom = new THREE.BufferGeometry().setFromPoints(points);
+            const line = new THREE.Line(geom, matLine);
+            group.add(line);
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+            ctx.fillRect(0, 0, 256, 64);
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(2, 2, 252, 60);
+
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = 'bold 26px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(labelText, 128, 32);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const spriteMat = new THREE.SpriteMaterial({ map: texture, depthTest: false });
+            const sprite = new THREE.Sprite(spriteMat);
+            const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+            sprite.position.copy(mid).add(offsetVec.clone().multiplyScalar(1.5));
+            sprite.scale.set(16, 4, 1);
+            group.add(sprite);
+
+            return group;
+        }
+
+        function buildCADCotas() {
+            const outW = SSOT.case.outerWidth;
+            const outH = SSOT.case.outerHeight;
+            const totalZ = SSOT.case.totalDepth;
+
+            // Outer Width Cota (75.2 mm along top)
+            cotasGroup.add(createDimensionLine(
+                new THREE.Vector3(-outW/2, outH/2 + 8, 0),
+                new THREE.Vector3(outW/2, outH/2 + 8, 0),
+                "75.2 mm (Case Slim)",
+                new THREE.Vector3(0, 2.5, 0)
+            ));
+
+            // Outer Height Cota (95.2 mm along right)
+            cotasGroup.add(createDimensionLine(
+                new THREE.Vector3(outW/2 + 8, -outH/2, 0),
+                new THREE.Vector3(outW/2 + 8, outH/2, 0),
+                "95.2 mm (Case Slim)",
+                new THREE.Vector3(2.5, 0, 0)
+            ));
+
+            // Perfboard Internal Cota
+            cotasGroup.add(createDimensionLine(
+                new THREE.Vector3(-35, -45 - 8, 0),
+                new THREE.Vector3(35, -45 - 8, 0),
+                "70.0 mm (PCB)",
+                new THREE.Vector3(0, -2.5, 0)
+            ));
+
+            // Thickness / Sandwich Cota (20.8 mm)
+            cotasGroup.add(createDimensionLine(
+                new THREE.Vector3(-outW/2 - 8, 0, -totalZ/2),
+                new THREE.Vector3(-outW/2 - 8, 0, totalZ/2),
+                "20.8 mm (Espesor)",
+                new THREE.Vector3(0, 2.5, 0)
+            ));
+        }
+
+        // Initialize All 3D Geometry
+        buildPerfboard();
+        build3DPrintedFrame();
+        buildLaserCutAcrylicCovers();
+        buildSecurityScrews();
+        buildPowerAndSecurityHarness();
+        buildFrontComponents();
+        buildBackComponents();
+        buildCADCotas();
+
+        /* -------------------------------------------------------------
+           5. INTERACTION & EXPLODED VIEW CONTROL
+           ------------------------------------------------------------- */
+        
+        // 5.1 Exploded View Slider (Z-axis offset across all 9 sandwich layers)
+        const explodeSlider = document.getElementById('explode-slider');
+        const explodeNum = document.getElementById('explode-num');
+
+        explodeSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            explodeNum.textContent = `${val.toFixed(1)} mm`;
+
+            frontScrewGroup.position.z = val * 1.8;
+            frontAcrylicGroup.position.z = val * 1.35;
+            frontElectronicsGroup.position.z = val * 0.75;
+            
+            frame3DGroup.position.z = 0;
+            perfboardGroup.position.z = 0;
+
+            backElectronicsGroup.position.z = -val * 0.75;
+            backAcrylicGroup.position.z = -val * 1.35;
+            backScrewGroup.position.z = -val * 1.8;
+        });
+
+        // 5.2 Camera Presets
+        let targetCameraPos = new THREE.Vector3(125, 85, 175);
+        let targetControlsTarget = new THREE.Vector3(0, 0, 0);
+        let isTransitioningCamera = false;
+
+        function setView(viewType) {
+            document.querySelectorAll('.hud-controls .btn-action').forEach(b => {
+                if (['btn-front', 'btn-back', 'btn-iso', 'btn-side', 'btn-screw'].includes(b.id)) b.classList.remove('active');
+            });
+
+            if (viewType === 'front') {
+                document.getElementById('btn-front').classList.add('active');
+                targetCameraPos.set(0, 0, 170);
+                targetControlsTarget.set(0, 0, 0);
+            } else if (viewType === 'back') {
+                document.getElementById('btn-back').classList.add('active');
+                targetCameraPos.set(0, 0, -170);
+                targetControlsTarget.set(0, 0, 0);
+            } else if (viewType === 'iso') {
+                document.getElementById('btn-iso').classList.add('active');
+                targetCameraPos.set(125, 85, 175);
+                targetControlsTarget.set(0, 0, 0);
+            } else if (viewType === 'side') {
+                document.getElementById('btn-side').classList.add('active');
+                targetCameraPos.set(180, 0, 0);
+                targetControlsTarget.set(0, 0, 0);
+            } else if (viewType === 'screw') {
+                document.getElementById('btn-screw').classList.add('active');
+                // Zoom closely onto top-right corner fastener stack (X: 33.8, Y: 43.8)
+                targetCameraPos.set(48, 56, 32);
+                targetControlsTarget.set(33.8, 43.8, 0);
+                updateInspector('security_screws');
+            }
+            isTransitioningCamera = true;
+        }
+
+        // 5.3 Case Visibility Toggle
+        let caseVisible = true;
+        function toggleCaseVisibility() {
+            caseVisible = !caseVisible;
+            frontAcrylicGroup.visible = caseVisible;
+            backAcrylicGroup.visible = caseVisible;
+            frame3DGroup.visible = caseVisible;
+            frontScrewGroup.visible = caseVisible;
+            backScrewGroup.visible = caseVisible;
+            securityWireGroup.visible = caseVisible;
+            document.getElementById('btn-case').classList.toggle('active', caseVisible);
+        }
+
+        // 5.4 Glass Opacity Cycle (22% Clear -> 40% Gloss Refraction -> 12% Ultra Clear -> 0% Invisible)
+        let glassModeIndex = 0;
+        const glassModes = [
+            { label: "Cristal (22%)", opacity: 0.22, visible: true },
+            { label: "Reflejo (40%)", opacity: 0.40, visible: true },
+            { label: "Ultra Puro (12%)", opacity: 0.12, visible: true },
+            { label: "Oculto (0%)", opacity: 0.0, visible: false }
+        ];
+
+        function cycleGlassOpacity() {
+            glassModeIndex = (glassModeIndex + 1) % glassModes.length;
+            const mode = glassModes[glassModeIndex];
+            document.getElementById('glass-mode-label').textContent = mode.label;
+            
+            frontAcrylicGroup.visible = mode.visible;
+            backAcrylicGroup.visible = mode.visible;
+            acrylicGlassMat.opacity = mode.opacity;
+        }
+
+        // 5.5 CAD Cotas Toggle
+        let cotasActive = false;
+        function toggleCotas() {
+            cotasActive = !cotasActive;
+            cotasGroup.visible = cotasActive;
+            document.getElementById('btn-cotas').classList.toggle('active', cotasActive);
+        }
+
+        // 5.6 Turntable Toggle
+        let isTurntableActive = false;
+        function toggleTurntable() {
+            isTurntableActive = !isTurntableActive;
+            document.getElementById('btn-turntable').classList.toggle('active', isTurntableActive);
+        }
+
+        // 5.7 Visualizer Mode
+        function setVisualizerMode(mode) {
+            currentVisualizerMode = mode;
+            document.querySelectorAll('.mode-chips .chip').forEach(c => {
+                if (!c.id.includes('mic')) c.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // 5.8 Real Mic Input
+        async function toggleRealMic() {
+            const btn = document.getElementById('btn-real-mic');
+            if (isRealMicActive) {
+                if (micStream) micStream.getTracks().forEach(t => t.stop());
+                if (audioContext) audioContext.close();
+                isRealMicActive = false;
+                btn.classList.remove('active');
+                btn.textContent = '🎙️ Mic Real';
+            } else {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    const source = audioContext.createMediaStreamSource(micStream);
+                    analyserNode = audioContext.createAnalyser();
+                    analyserNode.fftSize = 512;
+                    source.connect(analyserNode);
+                    isRealMicActive = true;
+                    btn.classList.add('active');
+                    btn.textContent = '🎙️ Mic Activo';
+                } catch (err) {
+                    alert('No se pudo acceder al micrófono: ' + err.message);
+                }
+            }
+        }
+
+        // 5.9 Interactive Raycaster & Inspector Updating
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        const tooltip = document.getElementById('tooltip-3d');
+
+        function updateInspector(partKey) {
+            const data = COMPONENT_DB[partKey];
+            if (!data) return;
+
+            document.getElementById('selected-id').textContent = partKey.toUpperCase();
+            document.getElementById('comp-title').textContent = data.title;
+            document.getElementById('comp-side').textContent = data.side;
+            document.getElementById('comp-desc').textContent = data.desc;
+
+            const specsContainer = document.getElementById('comp-specs');
+            specsContainer.innerHTML = '';
+            for (const [key, val] of Object.entries(data.specs)) {
+                const item = document.createElement('div');
+                item.className = 'spec-item';
+                item.innerHTML = `<span class="label">${key}:</span><span class="val">${val}</span>`;
+                specsContainer.appendChild(item);
+            }
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(pickableObjects, true);
+
+            if (intersects.length > 0) {
+                const obj = intersects[0].object;
+                const id = obj.userData.id;
+                if (id && COMPONENT_DB[id]) {
+                    tooltip.style.display = 'block';
+                    tooltip.style.left = e.clientX + 'px';
+                    tooltip.style.top = e.clientY + 'px';
+                    tooltip.textContent = COMPONENT_DB[id].title;
+                    document.body.style.cursor = 'pointer';
+                    return;
+                }
+            }
+            tooltip.style.display = 'none';
+            document.body.style.cursor = 'default';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target.closest('.hud-panel')) return;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(pickableObjects, true);
+            if (intersects.length > 0) {
+                const id = intersects[0].object.userData.id;
+                if (id) updateInspector(id);
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        /* -------------------------------------------------------------
+           6. MAIN ANIMATION LOOP
+           ------------------------------------------------------------- */
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            const time = clock.getElapsedTime();
+
+            updateScreenAnimation(time);
+
+            if (isTurntableActive) {
+                mainAssemblyGroup.rotation.y += 0.008;
+            }
+
+            if (isTransitioningCamera) {
+                camera.position.lerp(targetCameraPos, 0.08);
+                controls.target.lerp(targetControlsTarget, 0.08);
+                if (camera.position.distanceTo(targetCameraPos) < 0.5) {
+                    isTransitioningCamera = false;
+                }
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

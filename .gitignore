@@ -1,0 +1,5 @@
+# Temporary / scratch
+scratch_pdf_pages/
+*.bak
+.DS_Store
+Thumbs.db
